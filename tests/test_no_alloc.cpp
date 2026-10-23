@@ -11,11 +11,11 @@
 
 #include "nexus/core/matching_engine.hpp"
 
-// On glibc, raw malloc/calloc/realloc are interposed and counted too. Sanitizers own malloc,
-// so there (and on macOS, where a definition in the executable does not interpose libc) only
-// the C++ allocation functions are counted. The engine is header-only C++ and never calls
-// malloc directly, so operator new is the path that matters.
-#if defined(__GLIBC__) && !defined(NEXUS_SANITIZED)
+// On glibc, raw malloc/calloc/realloc are interposed and counted too. On macOS a definition in
+// the executable does not interpose libc, so only the C++ allocation functions are counted.
+// The engine is header-only C++ and never calls malloc directly, so operator new is the path
+// that matters. (Not built under sanitizers, which own the allocator.)
+#if defined(__GLIBC__)
 #define NEXUS_COUNT_MALLOC 1
 extern "C" {
 void* __libc_malloc(size_t);

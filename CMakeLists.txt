@@ -53,18 +53,31 @@ target_include_directories(nexus INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
                                            ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(nexus INTERFACE nexus_warnings)
 
+find_package(Threads REQUIRED)
+add_library(nexus_app STATIC src/flow_generator.cpp src/pipeline.cpp)
+target_include_directories(nexus_app PUBLIC src)
+target_link_libraries(nexus_app PUBLIC nexus Threads::Threads)
+
+add_executable(nexus_lob src/main.cpp)
+target_link_libraries(nexus_lob PRIVATE nexus_app)
+
 enable_testing()
-foreach(t test_pool test_order_map test_ladder test_price_level test_matching test_no_alloc)
-  add_executable(${t} tests/${t}.cpp)
-  target_link_libraries(${t} PRIVATE nexus GTest::gtest_main)
-  add_test(NAME ${t} COMMAND ${t})
-endforeach()
-if(NEXUS_ASAN OR NEXUS_TSAN)
-  target_compile_definitions(test_no_alloc PRIVATE NEXUS_SANITIZED)
+set(NEXUS_TESTS test_pool test_order_map test_ladder test_price_level test_matching)
+# Sanitizer runtimes replace the allocator (and clang's define operator new), so allocation
+# counting only runs in plain Debug and Release builds.
+if(NOT NEXUS_ASAN AND NOT NEXUS_TSAN)
+  list(APPEND NEXUS_TESTS test_no_alloc)
 endif()
+foreach(t ${NEXUS_TESTS} test_spsc test_pipeline)
+  add_executable(${t} tests/${t}.cpp)
+  target_link_libraries(${t} PRIVATE nexus_app GTest::gtest_main)
+  add_test(NAME ${t} COMMAND ${t})
+  set_tests_properties(${t} PROPERTIES TIMEOUT 300)
+endforeach()
 
 # Default size keeps sanitizer runs quick; the full run is
 # fuzz_differential --seeds 200 --commands 100000 (Release).
 add_executable(fuzz_differential tests/fuzz_differential.cpp)
 target_link_libraries(fuzz_differential PRIVATE nexus)
 add_test(NAME fuzz_differential COMMAND fuzz_differential --seeds 20 --commands 20000)
+set_tests_properties(fuzz_differential PROPERTIES TIMEOUT 300)
