@@ -10,10 +10,14 @@ constexpr double kScale = 4294967296.0;  // 2^32
 }
 
 const FlowConfig& FlowGenerator::validated(const FlowConfig& c) {
-  const bool mix_ok = c.passive >= 0 && c.cancel >= 0 && c.passive + c.cancel <= 1;  // no NaN
+  // Comparisons are false for NaN, so NaN fails too. Each cancel consumes an id issued by an
+  // earlier passive order, so a mix with more cancels than passives cannot be realized.
+  const bool mix_ok =
+      c.passive >= 0 && c.cancel >= 0 && c.passive + c.cancel <= 1 && c.cancel <= c.passive;
+  // The mid stays 2 * depth from each band edge and orders land up to depth beyond it.
+  const uint64_t min_width = 4 * uint64_t{c.depth_ticks};
   if (!mix_ok || c.depth_ticks == 0 || c.max_qty == 0 || c.max_aggressive_qty == 0 ||
-      c.max_live == 0 || c.min_price >= c.max_price ||
-      c.max_price - c.min_price <= 4 * uint64_t{c.depth_ticks}) {
+      c.max_live == 0 || c.min_price >= c.max_price || c.max_price - c.min_price <= min_width) {
     throw std::invalid_argument("FlowConfig: invalid mix, depth, quantity or band");
   }
   return c;

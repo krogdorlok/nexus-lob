@@ -29,7 +29,7 @@ struct PipelineResult {
 
 // producer --SPSC--> engine (pinned) --SPSC--> publisher
 // Throws std::invalid_argument if cfg.flow.max_live could exceed kPipelineMaxOrders, if
-// commands is 0, or if warmup + commands overflows.
+// commands is 0, if warmup + commands overflows, or if rate is negative or not finite.
 // Latency of a command = tsc_end() when the publisher dequeues the command's first event
 // minus the tsc_begin() stamp the producer wrote just before pushing the command.
 template <class Engine>

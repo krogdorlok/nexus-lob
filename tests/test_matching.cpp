@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <memory>
 #include <vector>
 
 #include "nexus/core/matching_engine.hpp"
@@ -96,6 +95,17 @@ TEST(MatchingPool, RejectPoolExhaustedOnlyForRestingOrders) {
   EXPECT_EQ(h.run(modify(1, 149, 7)), Events{Event::modified(1, B, 149, 7)});
   h.run(cancel(2));
   EXPECT_EQ(h.run(limit(6, B, 152, 5)), Events{Event::accepted(6, B, 152, 5)});
+}
+
+TEST(MatchingPool, FullPoolRejectsCrossingGtcBeforeAnyFill) {
+  Harness<2> h;
+  h.run(limit(1, S, 150, 5));
+  h.run(limit(2, S, 151, 5));
+  const TopOfBook before = h.engine.top();
+  // Would fully fill, but a GTC order needs a free slot at entry, so nothing is touched.
+  EXPECT_EQ(h.run(limit(3, B, 151, 3)), Events{Event::rejected(3, RejectReason::PoolExhausted)});
+  EXPECT_EQ(h.engine.top(), before);
+  EXPECT_EQ(h.engine.live_orders(), 2u);
 }
 
 TEST_F(Matching, RejectFokUnfillableWithoutSideEffects) {

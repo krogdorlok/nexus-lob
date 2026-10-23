@@ -32,6 +32,18 @@ TEST(SPSC, FullPushFailsUntilPop) {
   EXPECT_FALSE(q->pop(v));
 }
 
+TEST(SPSC, SingleSlotRing) {
+  auto q = std::make_unique<SPSCRingBuffer<int, 1>>(std::numeric_limits<size_t>::max() - 2);
+  int v = 0;
+  for (int i = 0; i < 6; ++i) {  // crosses the 2^64 index wrap
+    EXPECT_FALSE(q->pop(v));
+    EXPECT_TRUE(q->push(i));
+    EXPECT_FALSE(q->push(99));
+    ASSERT_TRUE(q->pop(v));
+    EXPECT_EQ(v, i);
+  }
+}
+
 // Starts the indices just below a boundary and cycles across it many times.
 void cross_boundary(size_t start) {
   auto q = std::make_unique<SPSCRingBuffer<uint64_t, 8>>(start);

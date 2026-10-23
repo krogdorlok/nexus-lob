@@ -13,6 +13,7 @@ using namespace nexus;
 int main(int argc, char** argv) {
   PipelineConfig cfg;
   std::string engine = "nexus";
+  if (argc % 2 == 0) return std::fprintf(stderr, "every flag needs a value\n"), 2;
   for (int i = 1; i + 1 < argc; i += 2) {
     const std::string k = argv[i], v = argv[i + 1];
     if (k == "--engine")
@@ -31,7 +32,9 @@ int main(int argc, char** argv) {
   if (engine != "nexus" && engine != "naive") {
     return std::fprintf(stderr, "--engine must be nexus or naive\n"), 2;
   }
-  check_tsc_flags();
+  if (!check_tsc_flags()) {
+    return std::fprintf(stderr, "refusing to measure cross-core latency with this TSC\n"), 1;
+  }
   const double ns = calibrate_ns_per_tick();
 
   PipelineResult r;

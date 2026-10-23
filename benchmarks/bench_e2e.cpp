@@ -10,6 +10,7 @@
 // generates the stream; perf_compare subtracts it so counters reflect the engine alone.
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -129,6 +130,7 @@ int main(int argc, char** argv) {
   cfg.rate = 1e6;
   std::string engine = "both", out = "results", replay_engine;
   int reps = 5;
+  if (argc % 2 == 0) return std::fprintf(stderr, "every flag needs a value\n"), 2;
   for (int i = 1; i + 1 < argc; i += 2) {
     const std::string k = argv[i], v = argv[i + 1];
     if (k == "--engine") {
@@ -151,7 +153,7 @@ int main(int argc, char** argv) {
       return std::fprintf(stderr, "unknown flag %s\n", k.c_str()), 2;
     }
   }
-  if (reps < 1 || cfg.rate <= 0 || cfg.commands == 0 ||
+  if (reps < 1 || !(cfg.rate > 0) || !std::isfinite(cfg.rate) || cfg.commands == 0 ||
       (engine != "nexus" && engine != "naive" && engine != "both")) {
     return std::fprintf(stderr, "bad arguments\n"), 2;
   }

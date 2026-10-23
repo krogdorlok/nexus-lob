@@ -82,6 +82,8 @@ TEST(FlowGenerator, RejectsBadConfig) {
   bad([](FlowConfig& c) { c.cancel = std::numeric_limits<double>::quiet_NaN(); });
   bad([](FlowConfig& c) { c.depth_ticks = 0; });
   bad([](FlowConfig& c) { c.max_qty = 0; });
+  bad([](FlowConfig& c) { c.max_aggressive_qty = 0; });
+  bad([](FlowConfig& c) { c.passive = 0, c.cancel = 1; });  // more cancels than ids to cancel
   bad([](FlowConfig& c) { c.max_live = 0; });
   bad([](FlowConfig& c) { c.min_price = 10, c.max_price = 5; });
   bad([](FlowConfig& c) { c.min_price = 1, c.max_price = 40; });  // too narrow for depth 20
@@ -112,8 +114,25 @@ TEST(Pipeline, RejectsInvalidRunShape) {
   cfg.warmup = UINT64_MAX;
   EXPECT_THROW(run_pipeline(*engine, cfg), std::invalid_argument);
   cfg.warmup = 0;
+  cfg.rate = std::numeric_limits<double>::quiet_NaN();
+  EXPECT_THROW(run_pipeline(*engine, cfg), std::invalid_argument);
+  cfg.rate = -1;
+  EXPECT_THROW(run_pipeline(*engine, cfg), std::invalid_argument);
+  cfg.rate = 0;
   cfg.flow.max_live = kPipelineMaxOrders + 1;
   EXPECT_THROW(run_pipeline(*engine, cfg), std::invalid_argument);
+}
+
+TEST(Pipeline, SingleCommandNoWarmup) {
+  auto engine = std::make_unique<NexusEngine>(FlowConfig{}.min_price, FlowConfig{}.max_price);
+  PipelineConfig cfg;
+  cfg.engine_cpu = -1;
+  cfg.warmup = 0;
+  cfg.commands = 1;
+  const PipelineResult r = run_pipeline(*engine, cfg);
+  EXPECT_EQ(r.latency.count(), 1u);
+  EXPECT_GE(r.seconds, 0.0);
+  EXPECT_GE(r.events, 1u);
 }
 
 // Runs the three-thread pipeline end to end (also the TSan target for the pipeline).

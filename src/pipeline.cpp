@@ -1,6 +1,7 @@
 #include "pipeline.hpp"
 
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
@@ -23,6 +24,10 @@ namespace nexus {
 void pin_current_thread(int cpu) {
 #if defined(__linux__)
   if (cpu < 0) return;
+  if (cpu >= CPU_SETSIZE) {
+    std::fprintf(stderr, "warning: cpu %d out of range, running unpinned\n", cpu);
+    return;
+  }
   cpu_set_t set;
   CPU_ZERO(&set);
   CPU_SET(cpu, &set);
@@ -56,6 +61,9 @@ PipelineResult run_pipeline(Engine& engine, const PipelineConfig& cfg) {
   }
   if (cfg.commands == 0 || cfg.warmup > UINT64_MAX - cfg.commands) {
     throw std::invalid_argument("need commands > 0 and warmup + commands < 2^64");
+  }
+  if (!std::isfinite(cfg.rate) || cfg.rate < 0) {
+    throw std::invalid_argument("rate must be finite and >= 0 (0 = flood)");
   }
   auto in = std::make_unique<SPSCRingBuffer<Command, 1 << 16>>();
   auto out = std::make_unique<SPSCRingBuffer<Outbound, 1 << 16>>();

@@ -32,7 +32,6 @@ class MatchingEngine {
 
   TopOfBook top() const noexcept { return book_.top(); }
   size_t live_orders() const noexcept { return book_.live_orders(); }
-  const OrderBook<MaxOrders>& book() const noexcept { return book_; }
 
  private:
   // Limit used for a Market aggressor: crosses every resting price.

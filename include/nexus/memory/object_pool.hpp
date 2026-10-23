@@ -31,11 +31,12 @@ class ObjectPool {
   T* allocate(A&&... a) noexcept(noexcept(T{std::forward<A>(a)...})) {
     if (top_ == 0) [[unlikely]]
       return nullptr;
-    return ::new (free_[--top_]) T{std::forward<A>(a)...};
+    T* p = ::new (free_[top_ - 1]) T{std::forward<A>(a)...};  // pop only once construction succeeds
+    --top_;
+    return p;
   }
   void deallocate(T* p) noexcept { free_[top_++] = p; }
   size_t available() const noexcept { return top_; }
-  static constexpr size_t capacity() noexcept { return Cap; }
 
  private:
   std::unique_ptr<T*[]> free_;

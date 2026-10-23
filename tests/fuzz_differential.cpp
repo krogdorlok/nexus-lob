@@ -145,6 +145,7 @@ bool run_seed(uint64_t seed, uint64_t commands, Price lo, Price hi) {
 
 int main(int argc, char** argv) {
   uint64_t seeds = 20, commands = 20'000, first = 1;
+  if (argc % 2 == 0) return std::fprintf(stderr, "every flag needs a value\n"), 2;
   for (int i = 1; i + 1 < argc; i += 2) {
     const std::string k = argv[i];
     const uint64_t v = std::strtoull(argv[i + 1], nullptr, 10);
