@@ -13,9 +13,11 @@ cmake --preset release -B "$BUILD" -DNEXUS_NATIVE=ON -DNEXUS_WERROR=OFF
 cmake --build "$BUILD"
 ctest --test-dir "$BUILD" --output-on-failure
 
+# Taken before results/machine.txt is rewritten; results/ itself is what this script changes.
+commit="$(git rev-parse --short HEAD)$(git diff --quiet HEAD -- . ':!results' || echo ' (dirty)')"
 {
   echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "commit: $(git rev-parse --short HEAD)$(git diff --quiet || echo ' (dirty)')"
+  echo "commit: $commit"
   echo "os: $(uname -srm)"
   if [[ "$(uname -s)" == Linux ]]; then
     echo "cpu: $(lscpu | sed -n 's/^Model name:[[:space:]]*//p')"
