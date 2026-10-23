@@ -1,5 +1,6 @@
-// Proves process() never touches the heap: every global allocation function is replaced with
-// a counting version, and a 1M-command mixed workload must leave the counter at zero.
+// Proves process() never touches the heap: all 12 replaceable global operator new/delete pairs
+// (plain, array, aligned, nothrow, aligned nothrow, sized) are replaced with counting versions,
+// and a 1M-command mixed workload must leave the counter at zero.
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -62,6 +63,12 @@ void* operator new(size_t n, std::align_val_t a) {
 void* operator new[](size_t n, std::align_val_t a) { return ::operator new(n, a); }
 void* operator new(size_t n, const std::nothrow_t&) noexcept { return counted_alloc(n, 0); }
 void* operator new[](size_t n, const std::nothrow_t&) noexcept { return counted_alloc(n, 0); }
+void* operator new(size_t n, std::align_val_t a, const std::nothrow_t&) noexcept {
+  return counted_alloc(n, static_cast<size_t>(a));
+}
+void* operator new[](size_t n, std::align_val_t a, const std::nothrow_t&) noexcept {
+  return counted_alloc(n, static_cast<size_t>(a));
+}
 void operator delete(void* p) noexcept { std::free(p); }
 void operator delete[](void* p) noexcept { std::free(p); }
 void operator delete(void* p, size_t) noexcept { std::free(p); }
@@ -70,6 +77,10 @@ void operator delete(void* p, std::align_val_t) noexcept { std::free(p); }
 void operator delete[](void* p, std::align_val_t) noexcept { std::free(p); }
 void operator delete(void* p, size_t, std::align_val_t) noexcept { std::free(p); }
 void operator delete[](void* p, size_t, std::align_val_t) noexcept { std::free(p); }
+void operator delete(void* p, const std::nothrow_t&) noexcept { std::free(p); }
+void operator delete[](void* p, const std::nothrow_t&) noexcept { std::free(p); }
+void operator delete(void* p, std::align_val_t, const std::nothrow_t&) noexcept { std::free(p); }
+void operator delete[](void* p, std::align_val_t, const std::nothrow_t&) noexcept { std::free(p); }
 
 #ifdef NEXUS_COUNT_MALLOC
 extern "C" {

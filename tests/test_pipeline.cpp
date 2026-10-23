@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <cstring>
@@ -23,6 +24,29 @@ TEST(Timer, AdvancesAcrossSleepAndCalibrates) {
   EXPECT_GT(ns, 0.01);  // faster than 100 GHz is not a real clock
   EXPECT_LT(ns, 1000.0);
   EXPECT_NEAR(double(b - a) * ns, 10e6, 9e6);  // sleep may overshoot; must not be wildly off
+}
+
+// The pipeline subtracts stamps taken on different threads (and cores), so the timer must
+// never step backwards across threads: ping-pong a stamp and require it to only grow.
+TEST(Timer, MonotonicAcrossThreads) {
+  constexpr int kRounds = 100'000;
+  std::atomic<uint64_t> last{tsc_begin()};
+  std::atomic<int> turn{0};
+  std::atomic<int> backwards{0};
+  auto player = [&](int me) {
+    for (int i = 0; i < kRounds; ++i) {
+      while (turn.load(std::memory_order_acquire) != me) {
+      }
+      const uint64_t now = tsc_begin();
+      if (now < last.load(std::memory_order_relaxed)) backwards.fetch_add(1);
+      last.store(now, std::memory_order_relaxed);
+      turn.store(1 - me, std::memory_order_release);
+    }
+  };
+  std::thread other(player, 1);
+  player(0);
+  other.join();
+  EXPECT_EQ(backwards.load(), 0);
 }
 
 TEST(FlowGenerator, DeterministicAndRoughlyMatchesMix) {
