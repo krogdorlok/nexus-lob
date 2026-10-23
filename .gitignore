@@ -1,0 +1,6 @@
+build/
+.cache/
+compile_commands.json
+perf.data*
+__pycache__/
+.DS_Store
