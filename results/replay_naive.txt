@@ -1,7 +1,7 @@
-replay: 10000000 commands, 15812664 events, 11520061 commands/s
-replay: 10000000 commands, 15812664 events, 12505685 commands/s
-replay: 10000000 commands, 15812664 events, 12518678 commands/s
-replay: 10000000 commands, 15812664 events, 12651321 commands/s
-replay: 10000000 commands, 15812664 events, 11562354 commands/s
-replay: 10000000 commands, 15812664 events, 12495796 commands/s
-replay: 10000000 commands, 15812664 events, 12599114 commands/s
+replay: 10000000 commands, 15812664 events, 12409055 commands/s
+replay: 10000000 commands, 15812664 events, 12034485 commands/s
+replay: 10000000 commands, 15812664 events, 11594545 commands/s
+replay: 10000000 commands, 15812664 events, 12023310 commands/s
+replay: 10000000 commands, 15812664 events, 12367519 commands/s
+replay: 10000000 commands, 15812664 events, 12598749 commands/s
+replay: 10000000 commands, 15812664 events, 10553197 commands/s
