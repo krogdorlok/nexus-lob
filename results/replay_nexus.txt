@@ -1,0 +1,7 @@
+replay: 10000000 commands, 15812664 events, 45273290 commands/s
+replay: 10000000 commands, 15812664 events, 45111875 commands/s
+replay: 10000000 commands, 15812664 events, 43653047 commands/s
+replay: 10000000 commands, 15812664 events, 44425432 commands/s
+replay: 10000000 commands, 15812664 events, 44091176 commands/s
+replay: 10000000 commands, 15812664 events, 43948655 commands/s
+replay: 10000000 commands, 15812664 events, 44885394 commands/s

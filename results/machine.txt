@@ -1,0 +1,10 @@
+date: 2026-10-23T22:23:39Z
+commit: 3ebefb9
+os: Darwin 25.0.0 arm64
+cpu: Apple M2
+logical cpus: 8
+memory: 16 GiB
+cache line: 128 bytes
+perf: unavailable
+compiler: /usr/bin/c++ (Apple clang version 17.0.0 (clang-1700.3.19.1))
+flags: release preset, -O3 -march=native

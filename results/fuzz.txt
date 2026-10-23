@@ -1,0 +1,4 @@
+fuzz_differential: 200 seeds x 100000 commands, all identical
+  events: accepted=9153618 fill=7420854 cancelled=1522909 modified=343834 rejected=10056743
+  rejects: dup=42412 unknown=8051674 band=403878 zero=150749 pool=479300 fok=928730
+  modifies that crossed and filled: 90496
