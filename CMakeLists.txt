@@ -62,3 +62,9 @@ endforeach()
 if(NEXUS_ASAN OR NEXUS_TSAN)
   target_compile_definitions(test_no_alloc PRIVATE NEXUS_SANITIZED)
 endif()
+
+# Default size keeps sanitizer runs quick; the full run is
+# fuzz_differential --seeds 200 --commands 100000 (Release).
+add_executable(fuzz_differential tests/fuzz_differential.cpp)
+target_link_libraries(fuzz_differential PRIVATE nexus)
+add_test(NAME fuzz_differential COMMAND fuzz_differential --seeds 20 --commands 20000)
