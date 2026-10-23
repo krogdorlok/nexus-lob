@@ -1,13 +1,13 @@
 # NexusLOB design notes
 
-Each section names the decision, the alternative that was rejected, and why. Measured numbers
-live only in `results/` and the README table generated from it; this document explains
-mechanisms, not magnitudes.
+Each section names the decision, the alternative that was rejected, and why. Measured
+performance numbers live only in `results/`, the README table generated from it, and
+`RESUME.md`, which cites its files; this document explains mechanisms, not magnitudes.
 
 ## Data flow
 
 ```
-producer thread           engine thread (pinned)                 publisher thread
+producer thread           engine thread (pinned on Linux)        publisher thread
 FlowGenerator  --SPSC-->  MatchingEngine::process(cmd, sink) --SPSC-->  latency histogram
  stamp tsc_begin()         OrderBook: 2 x PriceLadder                  stamp tsc_end() on a
  just before push                     OrderMap (id -> Order*)          command's first event
@@ -32,17 +32,19 @@ A fuzzer that never fails proves little, so two guards keep it honest:
 * **Coverage gate.** The run fails unless every event type and every `RejectReason` actually
   occurred. This gate caught a real gap: the first configuration never hit `PoolExhausted`
   in the default run, so the tiny-pool configuration was shrunk to 16 slots.
-* **Mutation check.** Injecting realistic bugs (modify keeps priority on a quantity increase,
-  FOK off by one, missing market remainder cancel, sweep stopping early) makes the fuzzer fail
-  and print the seed and command index each time.
+* **Mutation check.** `scripts/mutation_check.sh` (run in CI, output in
+  `results/mutation.txt`) injects realistic bugs one at a time (modify keeps priority on a
+  quantity increase, FOK off by one, missing market remainder cancel, sweep stopping early)
+  and requires the fuzzer to fail on each, printing the seed and command index, while the
+  unmutated engine must pass.
 
-## Order: one 64-byte cache line
+## Order: 64 bytes, one x86 cache line
 
 `Order` is `alignas(64)` and exactly 64 bytes, enforced by `static_assert`. Everything the
-matcher touches for one resting order (id, price, quantities, side, links) is one line, so
-walking a level costs one line per order. Apple M-series cores use 128-byte lines; there an
-order shares a line with one neighbour, which is harmless because a level is walked by a
-single thread.
+matcher touches for one resting order (id, price, quantities, side, links) fits in one 64-byte
+line, so on x86 walking a level costs one line per order. Apple M-series cores use 128-byte
+lines; there two orders share a line, which is harmless because only the engine thread
+touches orders.
 
 ## Price level: intrusive doubly linked FIFO
 
@@ -98,9 +100,10 @@ end, including a key that must be skipped because it sits at its own home.
 
 **Sizing is a latency decision.** The index is sized for the book's maximum resting orders,
 not "as large as possible". Sequential ids hash uniformly over the whole table, so a table
-much larger than the cache turns every cancel into a cache miss. An earlier pipeline
-configuration sized for a million orders was measurably slower end to end than one sized for
-a realistic single-instrument book, which is why the pipeline uses 2^17 orders.
+much larger than the cache makes every lookup a likely cache miss. That is why the pipeline
+sizes the book for a realistic single-instrument working set (2^17 orders) rather than for
+millions. (An informal run during development pointed the same way; it is not recorded in
+`results/`, so no figure is claimed.)
 
 ## Memory: preallocated pool, pre-faulted
 
@@ -112,8 +115,9 @@ order slot freed most recently is reused first, and it is likely still in cache.
 unbounded worst-case latency, and the first touch of a fresh page is a page fault in the
 middle of matching.
 
-**Proof, not promise.** `test_no_alloc` replaces every global `operator new`/`delete` variant
-(on glibc, also `malloc`/`calloc`/`realloc`) with counting versions, runs 1M mixed commands
+**Proof, not promise.** `test_no_alloc` replaces all replaceable global `operator new` and
+`operator delete` overloads (plain, array, aligned, nothrow, aligned nothrow, sized; on glibc
+also `malloc`/`calloc`/`realloc`) with counting versions, runs 1M mixed commands
 after warmup, and asserts zero allocations. A deterministic run covering every reject reason
 and every market-remainder path is counted the same way. A positive control proves the
 counter fires.
@@ -157,21 +161,25 @@ end, which keeps out-of-order execution from moving work across the stamp. Ticks
 converted with a ratio calibrated against `steady_clock` over about 200 ms at startup; the
 nominal CPU frequency is never assumed, because the TSC frequency and the core frequency
 differ. `bench_e2e` refuses to run on x86 Linux if `/proc/cpuinfo` lacks `constant_tsc` and
-`nonstop_tsc`, since cross-core subtraction is only valid with an invariant, synchronized TSC.
+`nonstop_tsc`. Those flags establish an invariant TSC; they do not prove the cores are
+synchronized (the kernel checks that at boot and marks the TSC unstable otherwise), and
+multi-socket machines need extra care, so run on a single socket.
 
 **Apple Silicon.** The obvious ARM choice, a user-space `cntvct_el0` read, was observed going
 backwards across a short sleep on macOS (the thread can resume on another core), so it is not
 usable there. macOS uses
-`mach_absolute_time()`, the OS-maintained monotonic counter, which a cross-thread ping-pong
-test showed never stepping backwards. Its tick is coarse (the calibrated value is recorded as `ns_per_tick` in
-`results/e2e_<engine>.json`), so paced latencies on this platform are quantized to that step. `test_pipeline` asserts that the
-timer advances across a sleep and calibrates to a plausible frequency, so a broken timer fails
-a test instead of silently producing numbers.
+`mach_absolute_time()`, the OS-maintained monotonic counter. Its tick is coarse (the calibrated value is recorded as `ns_per_tick` in
+`results/e2e_<engine>.json`), so each latency sample on this platform is a whole number of ticks (the histogram itself is
+exact below 128 ticks and within 1.6% above). `test_pipeline` asserts that the timer advances
+across a sleep, calibrates to a plausible frequency, and never steps backwards in a 100k-round
+ping-pong between two threads, so a broken timer fails a test instead of silently producing
+numbers.
 
 ## Pinning and scheduling
 
-On Linux the engine thread is pinned with `pthread_setaffinity_np`, so it never migrates and
-keeps its L1/L2 warm; the producer and publisher are left to the scheduler. For lowest jitter,
+On Linux the engine thread is pinned with `pthread_setaffinity_np` (CPU 2 by default; the
+pipeline warns and continues unpinned if the call fails), so it never migrates and keeps its
+L1/L2 warm; the producer and publisher are left to the scheduler. For lowest jitter,
 also isolate that core from the scheduler (`isolcpus`/`nohz_full`) and pin interrupts
 elsewhere. macOS has no affinity API, so the pipeline warns once and requests
 `QOS_CLASS_USER_INTERACTIVE`, which steers threads toward performance cores. All three threads
@@ -215,7 +223,8 @@ spin rather than block: a blocked thread needs a wakeup that costs microseconds.
 6. **Why calibrate the TSC instead of using the CPU frequency?** The TSC ticks at a fixed
    reference rate that differs from the current core frequency under turbo or power saving.
    Calibrating against `steady_clock` measures the real ratio. Cross-core use also requires
-   `constant_tsc` and `nonstop_tsc`, which the benchmark checks.
+   an invariant TSC (`constant_tsc`, `nonstop_tsc`, which the benchmark checks) that the
+   kernel has found synchronized across cores.
 
 7. **Your latency histogram never allocates; how accurate are its percentiles?** It is
    log-linear: values below 128 ticks are exact; above that each power of two has 64 buckets,
@@ -224,8 +233,8 @@ spin rather than block: a blocked thread needs a wakeup that costs microseconds.
 
 8. **How do you know the fast engine is correct?** An independently written naive engine
    implements the same contract, and a differential fuzzer compares every event byte for byte
-   over 200 seeds of 100k commands (run in CI). It must also hit every reject reason, and it
-   catches injected bugs.
+   over 200 seeds of 100k commands (run in CI). It must also hit every reject reason, and a
+   scripted mutation check shows it catches injected bugs.
 
 9. **What happens when the pool is exhausted?** A Limit GTC order that might rest is rejected
    with `PoolExhausted` before it touches the book. Orders that never rest (IOC, FOK, market)

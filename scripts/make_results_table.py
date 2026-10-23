@@ -34,8 +34,8 @@ def ratio(nexus, naive, higher_is_better):
 def ratio_with_spread(a, b, higher_is_better):
     """Median ratio, or no ratio at all when the min-to-max ranges overlap."""
     overlap = a["min"] <= b["max"] and b["min"] <= a["max"]
-    return "within noise (ranges overlap)" if overlap else ratio(a["median"], b["median"],
-                                                                 higher_is_better)
+    return "ranges overlap, no ratio" if overlap else ratio(a["median"], b["median"],
+                                                            higher_is_better)
 
 
 def e2e_section(out):
@@ -137,11 +137,12 @@ def perf_section(out):
                 d[e] = None if d.get(e) is None or base.get(e) is None else d[e] - base[e]
     out.append("### Hardware counters (`perf stat`, `results/perf_<engine>.txt`)\n")
     if not nx or not nv or not base:
-        out.append("perf counters require Linux x86_64; run `scripts/perf_compare.sh` there.\n")
+        out.append("perf counters require Linux with perf (the intended target is x86_64); run "
+                   "`scripts/perf_compare.sh` there.\n")
         out.append("| Event | NexusLOB | Naive | Reduction |")
         out.append("|---|---|---|---|")
         for e in PERF_EVENTS:
-            out.append(f"| {e} | TBD (requires Linux x86_64) | TBD | TBD |")
+            out.append(f"| {e} | TBD (requires Linux x86_64 with perf) | TBD | TBD |")
         out.append("")
         return
     out.append("Single-threaded replay of the same 10M-command stream, mean of 5 perf runs each, "

@@ -1,7 +1,8 @@
 # Resume bullets
 
-Every number below is copied from the cited file in `results/` (Apple M2, see
-`results/machine.txt`). Rerun `scripts/bench_linux.sh` and update these if the files change.
+Every measured number below is copied from the cited file in `results/` (Apple M2, see
+`results/machine.txt`); stream and test sizes are parameters of the code. Rerun
+`scripts/bench_linux.sh` and update these if the files change.
 
 * **Built a C++20 limit order book whose matching core runs 3.55x faster than a
   `std::map`/`std::list` baseline.** Map-based books allocate a node per order and chase
@@ -17,8 +18,8 @@ Every number below is copied from the cited file in `results/` (Apple M2, see
   publisher threads communicate through SPSC rings with acquire/release ordering, cached peer
   indices and cache-line padding sized for Apple Silicon's 128-byte lines; latency is
   recorded into an allocation-free histogram. Investigating a stalled benchmark showed the ARM `cntvct_el0`
-  counter stepping backwards on macOS, so I switched to the OS monotonic clock and added a
-  test that fails on a broken timer. Paced at 1M commands/s, median latency was 125 ns across
+  counter stepping backwards on macOS, so I switched to the OS monotonic clock and added
+  tests (cross-thread ping-pong, sleep and calibration) that fail on a broken timer. Paced at 1M commands/s, median latency was 125 ns across
   two queue hops. *(results/e2e_nexus.json, results/e2e_naive.json)*
 
 * **Proved correctness with an independently written reference engine and a differential
