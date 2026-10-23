@@ -32,10 +32,10 @@ def ratio(nexus, naive, higher_is_better):
 
 
 def ratio_with_spread(a, b, higher_is_better):
-    """Median ratio, flagged when the two min-to-max ranges overlap (difference within noise)."""
-    r = ratio(a["median"], b["median"], higher_is_better)
+    """Median ratio, or no ratio at all when the min-to-max ranges overlap."""
     overlap = a["min"] <= b["max"] and b["min"] <= a["max"]
-    return f"{r} (ranges overlap)" if overlap else r
+    return "within noise (ranges overlap)" if overlap else ratio(a["median"], b["median"],
+                                                                 higher_is_better)
 
 
 def e2e_section(out):
@@ -49,7 +49,7 @@ def e2e_section(out):
                "brackets. Throughput comes from flood runs; latency comes from runs paced at "
                f"{nx['paced_rate_cmds_per_s']:,.0f} commands/s. Timer resolution "
                f"{nx['ns_per_tick']:.2f} ns.\n")
-    out.append("| Metric | NexusLOB | Naive | NexusLOB advantage |")
+    out.append("| Metric | NexusLOB | Naive | NexusLOB advantage (median ratio) |")
     out.append("|---|---|---|---|")
     a, b = nx["throughput_cmds_per_s"]["flood"], nv["throughput_cmds_per_s"]["flood"]
     out.append(f"| Throughput | {fmt_rate(a['median'])} [{fmt_rate(a['min'])} to "
@@ -84,8 +84,9 @@ def replay_section(out):
     out.append("|---|---|")
     out.append(f"| NexusLOB | {fmt_rate(a)} [{fmt_rate(min(nx))} to {fmt_rate(max(nx))}] |")
     out.append(f"| Naive | {fmt_rate(b)} [{fmt_rate(min(nv))} to {fmt_rate(max(nv))}] |")
-    overlap = min(nx) <= max(nv) and min(nv) <= max(nx)
-    out.append(f"| NexusLOB advantage | {ratio(a, b, True)}{' (ranges overlap)' if overlap else ''} |")
+    spread = {"nexus": {"median": a, "min": min(nx), "max": max(nx)},
+              "naive": {"median": b, "min": min(nv), "max": max(nv)}}
+    out.append(f"| NexusLOB advantage | {ratio_with_spread(spread['nexus'], spread['naive'], True)} |")
     out.append("")
 
 
