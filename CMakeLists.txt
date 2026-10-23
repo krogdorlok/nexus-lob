@@ -81,3 +81,8 @@ add_executable(fuzz_differential tests/fuzz_differential.cpp)
 target_link_libraries(fuzz_differential PRIVATE nexus)
 add_test(NAME fuzz_differential COMMAND fuzz_differential --seeds 20 --commands 20000)
 set_tests_properties(fuzz_differential PROPERTIES TIMEOUT 300)
+
+add_executable(bench_micro benchmarks/bench_micro.cpp)
+target_link_libraries(bench_micro PRIVATE nexus benchmark::benchmark)
+add_executable(bench_e2e benchmarks/bench_e2e.cpp)
+target_link_libraries(bench_e2e PRIVATE nexus_app)
