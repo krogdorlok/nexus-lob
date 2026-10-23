@@ -54,8 +54,11 @@ target_include_directories(nexus INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include
 target_link_libraries(nexus INTERFACE nexus_warnings)
 
 enable_testing()
-foreach(t test_pool test_order_map test_ladder test_price_level)
+foreach(t test_pool test_order_map test_ladder test_price_level test_matching test_no_alloc)
   add_executable(${t} tests/${t}.cpp)
   target_link_libraries(${t} PRIVATE nexus GTest::gtest_main)
   add_test(NAME ${t} COMMAND ${t})
 endforeach()
+if(NEXUS_ASAN OR NEXUS_TSAN)
+  target_compile_definitions(test_no_alloc PRIVATE NEXUS_SANITIZED)
+endif()
