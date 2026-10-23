@@ -1,0 +1,5 @@
+ok: unmutated engine -> pass (fuzz_differential: 8 seeds x 20000 commands, all identical)
+ok: modify keeps priority on quantity increase -> fail (MISMATCH seed=2 command=17245 cap=4096 band=[5000,5300])
+ok: FOK fillability off by one -> fail (MISMATCH seed=1 command=171 cap=16 band=[1,64])
+ok: market remainder not cancelled -> fail (MISMATCH seed=1 command=15 cap=16 band=[1,64])
+ok: sweep stops early -> fail (MISMATCH seed=1 command=122 cap=16 band=[1,64])

@@ -42,3 +42,7 @@ jobs:
       - name: Full differential fuzz
         if: matrix.preset == 'release'
         run: ./build/release/fuzz_differential --seeds 200 --commands 100000
+
+      - name: Fuzzer mutation check
+        if: matrix.preset == 'release'
+        run: scripts/mutation_check.sh

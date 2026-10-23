@@ -36,6 +36,8 @@ ctest --test-dir "$BUILD" --output-on-failure
 cat results/machine.txt
 
 "$BUILD/fuzz_differential" --seeds 200 --commands 100000 | tee results/fuzz.txt
+CXX="$(sed -n 's/^CMAKE_CXX_COMPILER:[A-Z]*=//p' "$BUILD/CMakeCache.txt")" \
+  scripts/mutation_check.sh | tee results/mutation.txt
 
 "$BUILD/bench_micro" --benchmark_repetitions="$REPS" --benchmark_report_aggregates_only=true \
   --benchmark_out=results/micro.json --benchmark_out_format=json
