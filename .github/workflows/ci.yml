@@ -38,3 +38,7 @@ jobs:
 
       - name: Test
         run: ctest --preset ${{ matrix.preset }}
+
+      - name: Full differential fuzz
+        if: matrix.preset == 'release'
+        run: ./build/release/fuzz_differential --seeds 200 --commands 100000
