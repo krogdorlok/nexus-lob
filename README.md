@@ -144,6 +144,68 @@ perf counters require Linux with perf (the intended target is x86_64); run `scri
 | branch-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
 <!-- /RESULTS -->
 
+## Linux x86 on AWS (free tier)
+
+The Mac cannot read hardware counters, so `scripts/aws/` runs the same suite on an EC2
+`c7i-flex.large` (Intel, free-tier eligible) and archives every run in S3 under
+`runs/<instance type>/<commit>/<time>/`. After each run, `launch_bench.sh` downloads the
+previous archived run of the same instance type and writes a `compare_results.py` table to
+`results/aws-<type>/comparison.md`, so a performance regression shows up as a flagged row.
+The instance clones a pushed commit, runs `scripts/aws/remote_bench.sh`, uploads that run's
+results plus a hardware manifest, and terminates itself. It has no SSH key, its security
+group allows no inbound traffic and only HTTP/HTTPS outbound, and its role can only write
+under `runs/` in the results bucket (versioned, so nothing can be silently overwritten). If
+the launcher is interrupted it terminates the instance; the instance's own shutdown deadline
+is the backstop.
+
+```sh
+aws login --profile nexus                    # short-lived credentials, no stored keys
+scripts/aws/setup.sh            # dry run: prints the bucket, role and security group it creates
+scripts/aws/setup.sh --apply
+scripts/aws/launch_bench.sh     # dry run: prints the launch command and the boot script
+scripts/aws/launch_bench.sh --apply          # about 30 minutes; fetches results/aws-<type>/
+python3 scripts/make_results_table.py results/aws-c7i-flex.large RESULTS_AWS
+scripts/aws/teardown.sh --apply              # remove the role and security group afterwards
+```
+
+With 2 vCPUs this instance cannot host the three spinning pipeline threads, so it skips the
+end-to-end benchmark and reports why; the remaining sections are measured there. The scripts
+refuse instance types that are not free-tier eligible unless `ALLOW_PAID=1` is set.
+
+<!-- RESULTS_AWS -->
+Machine (`results/aws-c7i-flex.large/machine.txt`):
+
+```
+TBD
+```
+
+### End to end (pipeline, `results/aws-c7i-flex.large/e2e_<engine>.json`)
+
+TBD (not yet measured)
+
+### Engine only (single-threaded replay, `results/aws-c7i-flex.large/replay_<engine>.txt`)
+
+TBD (not yet measured)
+
+### Micro benchmarks (Google Benchmark, `results/aws-c7i-flex.large/micro.json`)
+
+TBD (not yet measured)
+
+### Hardware counters (`perf stat`, `results/aws-c7i-flex.large/perf_<engine>.txt`)
+
+perf counters require Linux with perf (the intended target is x86_64); run `scripts/perf_compare.sh` there.
+
+| Event | NexusLOB | Naive | Reduction |
+|---|---|---|---|
+| cycles | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+| instructions | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+| L1-dcache-loads | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+| L1-dcache-load-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+| LLC-loads | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+| LLC-load-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+| branch-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+<!-- /RESULTS_AWS -->
+
 ## Reproducibility
 
 Two independent from-scratch runs in clean clones (`scripts/bench_linux.sh`, 7 repetitions

@@ -3,11 +3,15 @@
 # Intended for a quiet Linux x86_64 box with perf (for example an AWS c7i instance); on other
 # platforms it runs everything except hardware counters, which stay TBD.
 #   REPS=5 scripts/bench_linux.sh
+# REQUIRE_PERF=1 makes a missing or failing perf an error instead of a TBD.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 REPS=${REPS:-5}
 BUILD=build/bench
 mkdir -p results
+# Remove this script's previous outputs, so a skipped step can never leave stale numbers behind.
+rm -f results/machine.txt results/fuzz.txt results/mutation.txt results/micro.json \
+  results/replay_*.txt results/e2e_*.json results/e2e_skipped.txt results/perf_*.txt
 
 cmake --preset release -B "$BUILD" -DNEXUS_NATIVE=ON -DNEXUS_WERROR=OFF
 cmake --build "$BUILD"
@@ -44,15 +48,24 @@ CXX="$(sed -n 's/^CMAKE_CXX_COMPILER:[A-Z]*=//p' "$BUILD/CMakeCache.txt")" \
 "$BUILD/bench_micro" --benchmark_repetitions="$REPS" --benchmark_report_aggregates_only=true \
   --benchmark_out=results/micro.json --benchmark_out_format=json
 
-rm -f results/replay_nexus.txt results/replay_naive.txt
 for _ in $(seq "$REPS"); do  # interleaved, so load drift hits both engines alike
   for engine in nexus naive; do
     "$BUILD/bench_e2e" --replay "$engine" | tee -a "results/replay_$engine.txt"
   done
 done
 
-"$BUILD/bench_e2e" --reps "$REPS" --out results
+# The pipeline spins three threads, so on fewer than four logical CPUs they would share cores
+# and the numbers would measure the scheduler, not the engine.
+cpus=$(getconf _NPROCESSORS_ONLN)
+if ((cpus >= 4)); then
+  "$BUILD/bench_e2e" --reps "$REPS" --out results
+else
+  echo "skipped: this machine has $cpus logical CPUs; the pipeline needs 3 dedicated cores" |
+    tee results/e2e_skipped.txt
+fi
 
-BIN="$BUILD/bench_e2e" scripts/perf_compare.sh || true
+if ! BIN="$BUILD/bench_e2e" scripts/perf_compare.sh; then
+  [[ -z ${REQUIRE_PERF:-} ]] || exit 1
+fi
 
 python3 scripts/make_results_table.py

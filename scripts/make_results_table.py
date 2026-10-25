@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-"""Builds the README results section from files in results/ and injects it between the
-<!-- RESULTS --> and <!-- /RESULTS --> markers. Every number comes from a results file;
-anything missing is written as TBD."""
+"""Builds a README results section from a results directory and injects it between the
+<!-- MARKER --> and <!-- /MARKER --> comments. Every number comes from a results file;
+anything missing is written as TBD.
+    python3 scripts/make_results_table.py [RESULTS_DIR] [MARKER]
+Defaults: results/ and RESULTS. The AWS run uses results/aws-<type> and RESULTS_AWS."""
 import json
 import re
 import statistics
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RES = ROOT / "results"
+RES = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "results"
+MARKER = sys.argv[2] if len(sys.argv) > 2 else "RESULTS"
 README = ROOT / "README.md"
-START, END = "<!-- RESULTS -->", "<!-- /RESULTS -->"
+START, END = f"<!-- {MARKER} -->", f"<!-- /{MARKER} -->"
 PERF_EVENTS = ["cycles", "instructions", "L1-dcache-loads", "L1-dcache-load-misses",
                "LLC-loads", "LLC-load-misses", "branch-misses"]
+
+
+def rel(name):
+    """Path of a results file as shown in the README, relative to the repo root."""
+    return f"{RES.relative_to(ROOT)}/{name}" if RES.is_relative_to(ROOT) else name
 
 
 def load_json(name):
@@ -40,9 +49,11 @@ def ratio_with_spread(a, b, higher_is_better):
 
 def e2e_section(out):
     nx, nv = load_json("e2e_nexus.json"), load_json("e2e_naive.json")
-    out.append("### End to end (pipeline, `results/e2e_<engine>.json`)\n")
+    out.append(f"### End to end (pipeline, `{rel('e2e_<engine>.json')}`)\n")
+    skipped = RES / "e2e_skipped.txt"
     if not nx or not nv:
-        out.append("TBD (not yet measured)\n")
+        reason = skipped.read_text().strip() if skipped.exists() else "not yet measured"
+        out.append(f"TBD ({reason})\n")
         return
     out.append(f"{nx['reps']} repetitions of {nx['commands']:,} measured commands after "
                f"{nx['warmup']:,} warmup. Median, with min to max across repetitions in "
@@ -73,7 +84,7 @@ def replay_rates(engine):
 
 def replay_section(out):
     nx, nv = replay_rates("nexus"), replay_rates("naive")
-    out.append("### Engine only (single-threaded replay, `results/replay_<engine>.txt`)\n")
+    out.append(f"### Engine only (single-threaded replay, `{rel('replay_<engine>.txt')}`)\n")
     if not nx or not nv:
         out.append("TBD (not yet measured)\n")
         return
@@ -92,7 +103,7 @@ def replay_section(out):
 
 def micro_section(out):
     data = load_json("micro.json")
-    out.append("### Micro benchmarks (Google Benchmark, `results/micro.json`)\n")
+    out.append(f"### Micro benchmarks (Google Benchmark, `{rel('micro.json')}`)\n")
     if not data:
         out.append("TBD (not yet measured)\n")
         return
@@ -135,7 +146,7 @@ def perf_section(out):
         for d in (nx, nv):
             for e in PERF_EVENTS:
                 d[e] = None if d.get(e) is None or base.get(e) is None else d[e] - base[e]
-    out.append("### Hardware counters (`perf stat`, `results/perf_<engine>.txt`)\n")
+    out.append(f"### Hardware counters (`perf stat`, `{rel('perf_<engine>.txt')}`)\n")
     if not nx or not nv or not base:
         out.append("perf counters require Linux with perf (the intended target is x86_64); run "
                    "`scripts/perf_compare.sh` there.\n")
@@ -146,7 +157,7 @@ def perf_section(out):
         out.append("")
         return
     out.append("Single-threaded replay of the same 10M-command stream, mean of 5 perf runs each, "
-               "minus a generation-only baseline run (`results/perf_baseline.txt`), so the "
+               f"minus a generation-only baseline run (`{rel('perf_baseline.txt')}`), so the "
                "counts are engine work only.\n")
     out.append("| Event | NexusLOB | Naive | Reduction |")
     out.append("|---|---|---|---|")
@@ -165,7 +176,7 @@ def perf_section(out):
 def main():
     out = []
     machine = RES / "machine.txt"
-    out.append("Machine (`results/machine.txt`):\n")
+    out.append(f"Machine (`{rel('machine.txt')}`):\n")
     out.append("```\n" + (machine.read_text().strip() if machine.exists() else "TBD") + "\n```\n")
     e2e_section(out)
     replay_section(out)

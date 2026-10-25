@@ -17,10 +17,10 @@ Every measured number below is copied from the cited file in `results/` (Apple M
   2.04x the baseline engine in the same pipeline.** Producer, engine (pinned on Linux) and
   publisher threads communicate through SPSC rings with acquire/release ordering, cached peer
   indices and cache-line padding sized for Apple Silicon's 128-byte lines; latency is
-  recorded into an allocation-free histogram. Investigating a stalled benchmark showed the ARM `cntvct_el0`
-  counter stepping backwards on macOS, so I switched to the OS monotonic clock and added
-  tests (cross-thread ping-pong, sleep and calibration) that fail on a broken timer. Paced at 1M commands/s, median latency was 125 ns across
-  two queue hops. *(results/e2e_nexus.json, results/e2e_naive.json)*
+  recorded into an allocation-free histogram. Investigating a stalled benchmark showed the
+  ARM `cntvct_el0` counter stepping backwards on macOS, so I switched to the OS monotonic
+  clock and added tests (cross-thread ping-pong, sleep and calibration) that fail on a broken
+  timer. Paced at 1M commands/s, median latency was 125 ns across two queue hops. *(results/e2e_nexus.json, results/e2e_naive.json)*
 
 * **Proved correctness with an independently written reference engine and a differential
   fuzzer.** Hand-written tests miss interaction bugs between cancels, partial fills and

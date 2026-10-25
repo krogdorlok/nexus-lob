@@ -10,14 +10,20 @@ from pathlib import Path
 
 
 def e2e(d, engine):
-    j = json.loads((d / f"e2e_{engine}.json").read_text())
+    p = d / f"e2e_{engine}.json"
+    if not p.exists():  # e.g. a machine with too few cores for the pipeline
+        return
+    j = json.loads(p.read_text())
     yield f"e2e {engine} throughput (cmds/s)", j["throughput_cmds_per_s"]["flood"]["median"]
     for k in ("p50", "p90", "p99", "p99_9", "max"):
         yield f"e2e {engine} latency {k} (ns)", j["latency_ns"][k]["median"]
 
 
 def replay(d, engine):
-    text = (d / f"replay_{engine}.txt").read_text()
+    p = d / f"replay_{engine}.txt"
+    if not p.exists():
+        return
+    text = p.read_text()
     yield f"replay {engine} (cmds/s)", statistics.median(
         float(x) for x in re.findall(r"([\d.]+) commands/s", text))
 
@@ -28,12 +34,24 @@ def micro(d):
             yield f"micro {b['run_name']} (CPU ns/op)", 1e9 / b["items_per_second"]
 
 
+def perf(d, run):
+    p = d / f"perf_{run}.txt"
+    if not p.exists():
+        return
+    for line in p.read_text().splitlines():
+        parts = line.split(",")
+        if len(parts) > 2 and parts[0].replace(".", "").isdigit():
+            yield f"perf {run} {parts[2]}", float(parts[0])
+
+
 def metrics(d):
     out = {}
     for engine in ("nexus", "naive"):
         out.update(e2e(d, engine))
         out.update(replay(d, engine))
     out.update(micro(d))
+    for run in ("nexus", "naive", "baseline"):
+        out.update(perf(d, run))
     return out
 
 
@@ -52,6 +70,8 @@ def main():
     print("| Metric | Baseline | Rerun | Change |")
     print("|---|---|---|---|")
     for name, va in ma.items():
+        if name not in mb:
+            continue
         vb = mb[name]
         change = (vb - va) / va * 100 if va else 0.0
         cells = [name, f"{va:,.1f}", f"{vb:,.1f}", f"{change:+.1f}%"]
