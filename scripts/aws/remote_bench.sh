@@ -12,7 +12,9 @@ if [[ $EUID == 0 ]]; then
   sysctl -w kernel.perf_event_paranoid=1  # let perf read hardware counters
 fi
 rm -rf results && mkdir results  # nothing committed or stale can ride along with this run
-scripts/bench_linux.sh
+rc=0
+scripts/bench_linux.sh || rc=$?  # on failure, still upload what exists for debugging; only the
+                                 # DONE marker (written after success) marks a run complete
 
 {
   echo "== lscpu"
@@ -30,6 +32,7 @@ if [[ $target == s3://* ]]; then
 else
   mkdir -p "$target"
   cp -R results/. "$target/"
-  touch "$target/DONE"
+  ((rc != 0)) || touch "$target/DONE"
 fi
 echo "results copied to $target"
+exit "$rc"

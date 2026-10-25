@@ -9,10 +9,20 @@ cd "$(dirname "$0")/.."
 BIN=${BIN:-build/bench/bench_e2e}
 EVENTS=cycles,instructions,L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses,branch-misses
 
-rm -f results/perf_nexus.txt results/perf_naive.txt results/perf_baseline.txt
+rm -f results/perf_nexus.txt results/perf_naive.txt results/perf_baseline.txt \
+  results/perf_unavailable.txt
 if [[ "$(uname -s)" != Linux ]] || ! command -v perf >/dev/null; then
   echo "perf_compare: needs Linux with perf; hardware counters stay TBD" >&2
   exit 1
+fi
+# Many virtual machines expose no hardware counters at all. That is a property of the machine,
+# so it is recorded as the result (with perf's own words) rather than treated as a failure.
+if ! probe=$(perf stat -x, -e cycles -- true 2>&1) || [[ $probe == *"not supported"* ]]; then
+  {
+    echo "this machine exposes no hardware performance counters to perf:"
+    echo "$probe" | grep -v '^$' | head -3
+  } | tee results/perf_unavailable.txt
+  exit 0
 fi
 
 tmp=$(mktemp -d)

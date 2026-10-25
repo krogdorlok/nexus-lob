@@ -147,6 +147,11 @@ def perf_section(out):
             for e in PERF_EVENTS:
                 d[e] = None if d.get(e) is None or base.get(e) is None else d[e] - base[e]
     out.append(f"### Hardware counters (`perf stat`, `{rel('perf_<engine>.txt')}`)\n")
+    unavailable = RES / "perf_unavailable.txt"
+    if unavailable.exists():
+        reason = " ".join(unavailable.read_text().split())
+        out.append(f"Not measurable here, recorded in `{rel('perf_unavailable.txt')}`: {reason}\n")
+        return
     if not nx or not nv or not base:
         out.append("perf counters require Linux with perf (the intended target is x86_64); run "
                    "`scripts/perf_compare.sh` there.\n")
