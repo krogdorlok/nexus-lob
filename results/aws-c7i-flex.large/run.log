@@ -1,0 +1,854 @@
++ BUCKET=nexus-lob-bench-696592800228-us-east-2
++ PREFIX=runs/c7i-flex.large/41193ee/20261026T005030Z
++ COMMIT=41193ee60a43886a66ec71b2c33ee97c8a541df5
++ REPO=https://github.com/krogdorlok/nexus-lob
++ export NEXUS_AMI=ami-0fc53b217ec1ad816 NEXUS_INSTANCE_TYPE=c7i-flex.large
++ NEXUS_AMI=ami-0fc53b217ec1ad816
++ NEXUS_INSTANCE_TYPE=c7i-flex.large
++ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin:/snap/bin
++ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin:/snap/bin
++ trap finish EXIT
++ shutdown -h +90
+Shutdown scheduled for Mon 2026-10-26 02:20:51 UTC, use 'shutdown -c' to cancel.
++ snap wait system seed.loaded
++ snap install aws-cli --classic
+aws-cli (v2/stable) 2.35.21 from Amazon Web Services (aws**) installed
++ export DEBIAN_FRONTEND=noninteractive
++ DEBIAN_FRONTEND=noninteractive
++ apt-get update
+Hit:1 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble InRelease
+Get:2 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+Get:3 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+Get:4 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+Get:5 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 Packages [15.0 MB]
+Get:6 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/universe Translation-en [5982 kB]
+Get:7 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages [1146 kB]
+Get:8 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 Components [3871 kB]
+Get:9 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 c-n-f Metadata [301 kB]
+Get:10 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/multiverse amd64 Packages [269 kB]
+Get:11 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/multiverse Translation-en [118 kB]
+Get:12 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/multiverse amd64 Components [35.0 kB]
+Get:13 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/multiverse amd64 c-n-f Metadata [8328 B]
+Get:14 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1400 kB]
+Get:15 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+Get:16 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1706 kB]
+Get:17 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [342 kB]
+Get:18 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+Get:19 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [34.9 kB]
+Get:20 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Packages [50.7 kB]
+Get:21 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/multiverse Translation-en [14.0 kB]
+Get:22 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+Get:23 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 c-n-f Metadata [656 B]
+Get:24 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/main amd64 Packages [40.6 kB]
+Get:25 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/main Translation-en [9172 B]
+Get:26 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5764 B]
+Get:27 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/main amd64 c-n-f Metadata [368 B]
+Get:28 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Packages [31.0 kB]
+Get:29 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/universe Translation-en [18.6 kB]
+Get:30 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.6 kB]
+Get:31 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/universe amd64 c-n-f Metadata [1588 B]
+Get:32 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [212 B]
+Get:33 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 c-n-f Metadata [116 B]
+Get:34 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Packages [748 B]
+Get:35 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/multiverse Translation-en [340 B]
+Get:36 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+Get:37 http://security.ubuntu.com/ubuntu noble-security/main amd64 Components [46.4 kB]
+Get:38 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1222 kB]
+Get:39 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 c-n-f Metadata [116 B]
+Get:40 http://security.ubuntu.com/ubuntu noble-security/universe Translation-en [246 kB]
+Get:41 http://security.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+Get:42 http://security.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [24.2 kB]
+Get:43 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Packages [45.4 kB]
+Get:44 http://security.ubuntu.com/ubuntu noble-security/multiverse Translation-en [12.1 kB]
+Get:45 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [208 B]
+Get:46 http://security.ubuntu.com/ubuntu noble-security/multiverse amd64 c-n-f Metadata [468 B]
+Fetched 33.1 MB in 4s (8418 kB/s)
+Reading package lists...
+++ uname -r
++ apt-get install -y build-essential g++-13 cmake ninja-build git python3 linux-tools-common linux-tools-7.0.0-1014-aws
+Reading package lists...
+Building dependency tree...
+Reading state information...
+git is already the newest version (1:2.43.0-1ubuntu7.4).
+git set to manually installed.
+python3 is already the newest version (3.12.3-0ubuntu2.1).
+python3 set to manually installed.
+linux-tools-common is already the newest version (6.8.0-147.147).
+linux-tools-common set to manually installed.
+linux-tools-7.0.0-1014-aws is already the newest version (7.0.0-1014.14~24.04.1).
+linux-tools-7.0.0-1014-aws set to manually installed.
+The following additional packages will be installed:
+  binutils binutils-common binutils-x86-64-linux-gnu bzip2 cmake-data cpp
+  cpp-13 cpp-13-x86-64-linux-gnu cpp-x86-64-linux-gnu dpkg-dev fakeroot
+  fontconfig-config fonts-dejavu-core fonts-dejavu-mono g++
+  g++-13-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-13 gcc-13-base
+  gcc-13-x86-64-linux-gnu gcc-x86-64-linux-gnu libalgorithm-diff-perl
+  libalgorithm-diff-xs-perl libalgorithm-merge-perl libaom3 libasan8
+  libatomic1 libbinutils libc-dev-bin libc-devtools libc6-dev libcc1-0
+  libcrypt-dev libctf-nobfd0 libctf0 libdeflate0 libdpkg-perl libfakeroot
+  libfile-fcntllock-perl libfontconfig1 libgcc-13-dev libgd3 libgomp1
+  libgprofng0 libheif-plugin-aomdec libheif-plugin-aomenc libheif1 libhwasan0
+  libisl23 libitm1 libjbig0 libjpeg-turbo8 libjpeg8 libjsoncpp25 liblerc4
+  liblsan0 libmpc3 libquadmath0 librhash0 libsframe1 libsharpyuv0
+  libstdc++-13-dev libtiff6 libtsan2 libubsan1 libwebp7 libxpm4 linux-libc-dev
+  lto-disabled-list make manpages-dev rpcsvc-proto
+Suggested packages:
+  binutils-doc gprofng-gui bzip2-doc cmake-doc cmake-format elpa-cmake-mode
+  cpp-doc gcc-13-locales cpp-13-doc debian-keyring g++-multilib
+  g++-13-multilib gcc-13-doc gcc-multilib autoconf automake libtool flex bison
+  gdb gcc-doc gcc-13-multilib gdb-x86-64-linux-gnu glibc-doc bzr libgd-tools
+  libheif-plugin-libde265 libheif-plugin-x265 libheif-plugin-ffmpegdec
+  libheif-plugin-jpegdec libheif-plugin-jpegenc libheif-plugin-j2kdec
+  libheif-plugin-j2kenc libheif-plugin-rav1e libheif-plugin-svtenc
+  libstdc++-13-doc make-doc
+The following NEW packages will be installed:
+  binutils binutils-common binutils-x86-64-linux-gnu build-essential bzip2
+  cmake cmake-data cpp cpp-13 cpp-13-x86-64-linux-gnu cpp-x86-64-linux-gnu
+  dpkg-dev fakeroot fontconfig-config fonts-dejavu-core fonts-dejavu-mono g++
+  g++-13 g++-13-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-13 gcc-13-base
+  gcc-13-x86-64-linux-gnu gcc-x86-64-linux-gnu libalgorithm-diff-perl
+  libalgorithm-diff-xs-perl libalgorithm-merge-perl libaom3 libasan8
+  libatomic1 libbinutils libc-dev-bin libc-devtools libc6-dev libcc1-0
+  libcrypt-dev libctf-nobfd0 libctf0 libdeflate0 libdpkg-perl libfakeroot
+  libfile-fcntllock-perl libfontconfig1 libgcc-13-dev libgd3 libgomp1
+  libgprofng0 libheif-plugin-aomdec libheif-plugin-aomenc libheif1 libhwasan0
+  libisl23 libitm1 libjbig0 libjpeg-turbo8 libjpeg8 libjsoncpp25 liblerc4
+  liblsan0 libmpc3 libquadmath0 librhash0 libsframe1 libsharpyuv0
+  libstdc++-13-dev libtiff6 libtsan2 libubsan1 libwebp7 libxpm4 linux-libc-dev
+  lto-disabled-list make manpages-dev ninja-build rpcsvc-proto
+0 upgraded, 77 newly installed, 0 to remove and 0 not upgraded.
+Need to get 91.3 MB of archives.
+After this operation, 317 MB of additional disk space will be used.
+Get:1 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 binutils-common amd64 2.42-4ubuntu2.10 [240 kB]
+Get:2 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libsframe1 amd64 2.42-4ubuntu2.10 [15.7 kB]
+Get:3 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libbinutils amd64 2.42-4ubuntu2.10 [577 kB]
+Get:4 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libctf-nobfd0 amd64 2.42-4ubuntu2.10 [98.0 kB]
+Get:5 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libctf0 amd64 2.42-4ubuntu2.10 [94.5 kB]
+Get:6 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libgprofng0 amd64 2.42-4ubuntu2.10 [849 kB]
+Get:7 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 binutils-x86-64-linux-gnu amd64 2.42-4ubuntu2.10 [2463 kB]
+Get:8 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 binutils amd64 2.42-4ubuntu2.10 [18.2 kB]
+Get:9 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc-dev-bin amd64 2.39-0ubuntu8.9 [20.4 kB]
+Get:10 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 linux-libc-dev amd64 6.8.0-147.147 [1595 kB]
+Get:11 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libcrypt-dev amd64 1:4.4.36-4build1 [112 kB]
+Get:12 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 rpcsvc-proto amd64 1.4.2-0ubuntu7 [67.4 kB]
+Get:13 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc6-dev amd64 2.39-0ubuntu8.9 [2126 kB]
+Get:14 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-base amd64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+Get:15 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libisl23 amd64 0.26-3build1.1 [680 kB]
+Get:16 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libmpc3 amd64 1.3.1-1build1.1 [54.6 kB]
+Get:17 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 cpp-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [10.7 MB]
+Get:18 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 cpp-13 amd64 13.3.0-6ubuntu2~24.04.1 [1042 B]
+Get:19 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 cpp-x86-64-linux-gnu amd64 4:13.2.0-7ubuntu1 [5326 B]
+Get:20 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 cpp amd64 4:13.2.0-7ubuntu1 [22.4 kB]
+Get:21 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libcc1-0 amd64 14.2.0-4ubuntu2~24.04.1 [48.0 kB]
+Get:22 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libgomp1 amd64 14.2.0-4ubuntu2~24.04.1 [148 kB]
+Get:23 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libitm1 amd64 14.2.0-4ubuntu2~24.04.1 [29.7 kB]
+Get:24 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libatomic1 amd64 14.2.0-4ubuntu2~24.04.1 [10.5 kB]
+Get:25 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libasan8 amd64 14.2.0-4ubuntu2~24.04.1 [3027 kB]
+Get:26 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 liblsan0 amd64 14.2.0-4ubuntu2~24.04.1 [1322 kB]
+Get:27 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libtsan2 amd64 14.2.0-4ubuntu2~24.04.1 [2772 kB]
+Get:28 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libubsan1 amd64 14.2.0-4ubuntu2~24.04.1 [1184 kB]
+Get:29 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libhwasan0 amd64 14.2.0-4ubuntu2~24.04.1 [1641 kB]
+Get:30 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libquadmath0 amd64 14.2.0-4ubuntu2~24.04.1 [153 kB]
+Get:31 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libgcc-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2681 kB]
+Get:32 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [21.1 MB]
+Get:33 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 gcc-13 amd64 13.3.0-6ubuntu2~24.04.1 [494 kB]
+Get:34 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 gcc-x86-64-linux-gnu amd64 4:13.2.0-7ubuntu1 [1212 B]
+Get:35 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 gcc amd64 4:13.2.0-7ubuntu1 [5018 B]
+Get:36 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libstdc++-13-dev amd64 13.3.0-6ubuntu2~24.04.1 [2420 kB]
+Get:37 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13-x86-64-linux-gnu amd64 13.3.0-6ubuntu2~24.04.1 [12.2 MB]
+Get:38 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 g++-13 amd64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+Get:39 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 g++-x86-64-linux-gnu amd64 4:13.2.0-7ubuntu1 [964 B]
+Get:40 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 g++ amd64 4:13.2.0-7ubuntu1 [1100 B]
+Get:41 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 make amd64 4.3-4.1build2 [180 kB]
+Get:42 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libdpkg-perl all 1.22.6ubuntu6.6 [268 kB]
+Get:43 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 bzip2 amd64 1.0.8-5.1ubuntu0.1 [34.6 kB]
+Get:44 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 lto-disabled-list all 47 [12.4 kB]
+Get:45 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 dpkg-dev all 1.22.6ubuntu6.6 [1074 kB]
+Get:46 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 build-essential amd64 12.10ubuntu1 [4928 B]
+Get:47 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libjsoncpp25 amd64 1.9.5-6build1 [82.8 kB]
+Get:48 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 librhash0 amd64 1.4.3-3build1 [129 kB]
+Get:49 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 cmake-data all 3.28.3-1build7 [2155 kB]
+Get:50 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 cmake amd64 3.28.3-1build7 [11.2 MB]
+Get:51 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libfakeroot amd64 1.33-1 [32.4 kB]
+Get:52 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 fakeroot amd64 1.33-1 [67.2 kB]
+Get:53 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 fonts-dejavu-mono all 2.37-8 [502 kB]
+Get:54 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 fonts-dejavu-core all 2.37-8 [835 kB]
+Get:55 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 fontconfig-config amd64 2.15.0-1.1ubuntu2 [37.3 kB]
+Get:56 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libalgorithm-diff-perl all 1.201-1 [41.8 kB]
+Get:57 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libalgorithm-diff-xs-perl amd64 0.04-8build3 [11.2 kB]
+Get:58 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libalgorithm-merge-perl all 0.08-5 [11.4 kB]
+Get:59 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libaom3 amd64 3.8.2-2ubuntu0.2 [1942 kB]
+Get:60 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libfontconfig1 amd64 2.15.0-1.1ubuntu2 [139 kB]
+Get:61 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libsharpyuv0 amd64 1.3.2-0.4build3 [15.8 kB]
+Get:62 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libheif-plugin-aomdec amd64 1.17.6-1ubuntu4.9 [11.9 kB]
+Get:63 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libheif1 amd64 1.17.6-1ubuntu4.9 [277 kB]
+Get:64 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libjpeg-turbo8 amd64 2.1.5-2ubuntu2 [150 kB]
+Get:65 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libjpeg8 amd64 8c-2ubuntu11 [2148 B]
+Get:66 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libdeflate0 amd64 1.19-1build1.1 [43.9 kB]
+Get:67 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libjbig0 amd64 2.1-6.1ubuntu2 [29.7 kB]
+Get:68 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 liblerc4 amd64 4.0.0+ds-4ubuntu2 [179 kB]
+Get:69 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libwebp7 amd64 1.3.2-0.4build3 [230 kB]
+Get:70 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libtiff6 amd64 4.5.1+git230720-4ubuntu2.5 [200 kB]
+Get:71 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libxpm4 amd64 1:3.5.17-1ubuntu0.24.04.2 [36.7 kB]
+Get:72 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libgd3 amd64 2.3.3-9ubuntu5 [128 kB]
+Get:73 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libc-devtools amd64 2.39-0ubuntu8.9 [29.3 kB]
+Get:74 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 libfile-fcntllock-perl amd64 0.22-4ubuntu5 [30.7 kB]
+Get:75 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates/main amd64 libheif-plugin-aomenc amd64 1.17.6-1ubuntu4.9 [14.7 kB]
+Get:76 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/main amd64 manpages-dev all 6.7-2 [2013 kB]
+Get:77 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 ninja-build amd64 1.11.1-2 [129 kB]
+Fetched 91.3 MB in 1s (136 MB/s)
+Selecting previously unselected package binutils-common:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 79249 files and directories currently installed.)
+Preparing to unpack .../00-binutils-common_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking binutils-common:amd64 (2.42-4ubuntu2.10) ...
+Selecting previously unselected package libsframe1:amd64.
+Preparing to unpack .../01-libsframe1_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking libsframe1:amd64 (2.42-4ubuntu2.10) ...
+Selecting previously unselected package libbinutils:amd64.
+Preparing to unpack .../02-libbinutils_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking libbinutils:amd64 (2.42-4ubuntu2.10) ...
+Selecting previously unselected package libctf-nobfd0:amd64.
+Preparing to unpack .../03-libctf-nobfd0_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking libctf-nobfd0:amd64 (2.42-4ubuntu2.10) ...
+Selecting previously unselected package libctf0:amd64.
+Preparing to unpack .../04-libctf0_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking libctf0:amd64 (2.42-4ubuntu2.10) ...
+Selecting previously unselected package libgprofng0:amd64.
+Preparing to unpack .../05-libgprofng0_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking libgprofng0:amd64 (2.42-4ubuntu2.10) ...
+Selecting previously unselected package binutils-x86-64-linux-gnu.
+Preparing to unpack .../06-binutils-x86-64-linux-gnu_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking binutils-x86-64-linux-gnu (2.42-4ubuntu2.10) ...
+Selecting previously unselected package binutils.
+Preparing to unpack .../07-binutils_2.42-4ubuntu2.10_amd64.deb ...
+Unpacking binutils (2.42-4ubuntu2.10) ...
+Selecting previously unselected package libc-dev-bin.
+Preparing to unpack .../08-libc-dev-bin_2.39-0ubuntu8.9_amd64.deb ...
+Unpacking libc-dev-bin (2.39-0ubuntu8.9) ...
+Selecting previously unselected package linux-libc-dev:amd64.
+Preparing to unpack .../09-linux-libc-dev_6.8.0-147.147_amd64.deb ...
+Unpacking linux-libc-dev:amd64 (6.8.0-147.147) ...
+Selecting previously unselected package libcrypt-dev:amd64.
+Preparing to unpack .../10-libcrypt-dev_1%3a4.4.36-4build1_amd64.deb ...
+Unpacking libcrypt-dev:amd64 (1:4.4.36-4build1) ...
+Selecting previously unselected package rpcsvc-proto.
+Preparing to unpack .../11-rpcsvc-proto_1.4.2-0ubuntu7_amd64.deb ...
+Unpacking rpcsvc-proto (1.4.2-0ubuntu7) ...
+Selecting previously unselected package libc6-dev:amd64.
+Preparing to unpack .../12-libc6-dev_2.39-0ubuntu8.9_amd64.deb ...
+Unpacking libc6-dev:amd64 (2.39-0ubuntu8.9) ...
+Selecting previously unselected package gcc-13-base:amd64.
+Preparing to unpack .../13-gcc-13-base_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-base:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package libisl23:amd64.
+Preparing to unpack .../14-libisl23_0.26-3build1.1_amd64.deb ...
+Unpacking libisl23:amd64 (0.26-3build1.1) ...
+Selecting previously unselected package libmpc3:amd64.
+Preparing to unpack .../15-libmpc3_1.3.1-1build1.1_amd64.deb ...
+Unpacking libmpc3:amd64 (1.3.1-1build1.1) ...
+Selecting previously unselected package cpp-13-x86-64-linux-gnu.
+Preparing to unpack .../16-cpp-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking cpp-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package cpp-13.
+Preparing to unpack .../17-cpp-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package cpp-x86-64-linux-gnu.
+Preparing to unpack .../18-cpp-x86-64-linux-gnu_4%3a13.2.0-7ubuntu1_amd64.deb ...
+Unpacking cpp-x86-64-linux-gnu (4:13.2.0-7ubuntu1) ...
+Selecting previously unselected package cpp.
+Preparing to unpack .../19-cpp_4%3a13.2.0-7ubuntu1_amd64.deb ...
+Unpacking cpp (4:13.2.0-7ubuntu1) ...
+Selecting previously unselected package libcc1-0:amd64.
+Preparing to unpack .../20-libcc1-0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libcc1-0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libgomp1:amd64.
+Preparing to unpack .../21-libgomp1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgomp1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libitm1:amd64.
+Preparing to unpack .../22-libitm1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libitm1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libatomic1:amd64.
+Preparing to unpack .../23-libatomic1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libatomic1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libasan8:amd64.
+Preparing to unpack .../24-libasan8_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libasan8:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package liblsan0:amd64.
+Preparing to unpack .../25-liblsan0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking liblsan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libtsan2:amd64.
+Preparing to unpack .../26-libtsan2_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libtsan2:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libubsan1:amd64.
+Preparing to unpack .../27-libubsan1_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libubsan1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libhwasan0:amd64.
+Preparing to unpack .../28-libhwasan0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libhwasan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libquadmath0:amd64.
+Preparing to unpack .../29-libquadmath0_14.2.0-4ubuntu2~24.04.1_amd64.deb ...
+Unpacking libquadmath0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Selecting previously unselected package libgcc-13-dev:amd64.
+Preparing to unpack .../30-libgcc-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libgcc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package gcc-13-x86-64-linux-gnu.
+Preparing to unpack .../31-gcc-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package gcc-13.
+Preparing to unpack .../32-gcc-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package gcc-x86-64-linux-gnu.
+Preparing to unpack .../33-gcc-x86-64-linux-gnu_4%3a13.2.0-7ubuntu1_amd64.deb ...
+Unpacking gcc-x86-64-linux-gnu (4:13.2.0-7ubuntu1) ...
+Selecting previously unselected package gcc.
+Preparing to unpack .../34-gcc_4%3a13.2.0-7ubuntu1_amd64.deb ...
+Unpacking gcc (4:13.2.0-7ubuntu1) ...
+Selecting previously unselected package libstdc++-13-dev:amd64.
+Preparing to unpack .../35-libstdc++-13-dev_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking libstdc++-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package g++-13-x86-64-linux-gnu.
+Preparing to unpack .../36-g++-13-x86-64-linux-gnu_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking g++-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package g++-13.
+Preparing to unpack .../37-g++-13_13.3.0-6ubuntu2~24.04.1_amd64.deb ...
+Unpacking g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+Selecting previously unselected package g++-x86-64-linux-gnu.
+Preparing to unpack .../38-g++-x86-64-linux-gnu_4%3a13.2.0-7ubuntu1_amd64.deb ...
+Unpacking g++-x86-64-linux-gnu (4:13.2.0-7ubuntu1) ...
+Selecting previously unselected package g++.
+Preparing to unpack .../39-g++_4%3a13.2.0-7ubuntu1_amd64.deb ...
+Unpacking g++ (4:13.2.0-7ubuntu1) ...
+Selecting previously unselected package make.
+Preparing to unpack .../40-make_4.3-4.1build2_amd64.deb ...
+Unpacking make (4.3-4.1build2) ...
+Selecting previously unselected package libdpkg-perl.
+Preparing to unpack .../41-libdpkg-perl_1.22.6ubuntu6.6_all.deb ...
+Unpacking libdpkg-perl (1.22.6ubuntu6.6) ...
+Selecting previously unselected package bzip2.
+Preparing to unpack .../42-bzip2_1.0.8-5.1ubuntu0.1_amd64.deb ...
+Unpacking bzip2 (1.0.8-5.1ubuntu0.1) ...
+Selecting previously unselected package lto-disabled-list.
+Preparing to unpack .../43-lto-disabled-list_47_all.deb ...
+Unpacking lto-disabled-list (47) ...
+Selecting previously unselected package dpkg-dev.
+Preparing to unpack .../44-dpkg-dev_1.22.6ubuntu6.6_all.deb ...
+Unpacking dpkg-dev (1.22.6ubuntu6.6) ...
+Selecting previously unselected package build-essential.
+Preparing to unpack .../45-build-essential_12.10ubuntu1_amd64.deb ...
+Unpacking build-essential (12.10ubuntu1) ...
+Selecting previously unselected package libjsoncpp25:amd64.
+Preparing to unpack .../46-libjsoncpp25_1.9.5-6build1_amd64.deb ...
+Unpacking libjsoncpp25:amd64 (1.9.5-6build1) ...
+Selecting previously unselected package librhash0:amd64.
+Preparing to unpack .../47-librhash0_1.4.3-3build1_amd64.deb ...
+Unpacking librhash0:amd64 (1.4.3-3build1) ...
+Selecting previously unselected package cmake-data.
+Preparing to unpack .../48-cmake-data_3.28.3-1build7_all.deb ...
+Unpacking cmake-data (3.28.3-1build7) ...
+Selecting previously unselected package cmake.
+Preparing to unpack .../49-cmake_3.28.3-1build7_amd64.deb ...
+Unpacking cmake (3.28.3-1build7) ...
+Selecting previously unselected package libfakeroot:amd64.
+Preparing to unpack .../50-libfakeroot_1.33-1_amd64.deb ...
+Unpacking libfakeroot:amd64 (1.33-1) ...
+Selecting previously unselected package fakeroot.
+Preparing to unpack .../51-fakeroot_1.33-1_amd64.deb ...
+Unpacking fakeroot (1.33-1) ...
+Selecting previously unselected package fonts-dejavu-mono.
+Preparing to unpack .../52-fonts-dejavu-mono_2.37-8_all.deb ...
+Unpacking fonts-dejavu-mono (2.37-8) ...
+Selecting previously unselected package fonts-dejavu-core.
+Preparing to unpack .../53-fonts-dejavu-core_2.37-8_all.deb ...
+Unpacking fonts-dejavu-core (2.37-8) ...
+Selecting previously unselected package fontconfig-config.
+Preparing to unpack .../54-fontconfig-config_2.15.0-1.1ubuntu2_amd64.deb ...
+Unpacking fontconfig-config (2.15.0-1.1ubuntu2) ...
+Selecting previously unselected package libalgorithm-diff-perl.
+Preparing to unpack .../55-libalgorithm-diff-perl_1.201-1_all.deb ...
+Unpacking libalgorithm-diff-perl (1.201-1) ...
+Selecting previously unselected package libalgorithm-diff-xs-perl:amd64.
+Preparing to unpack .../56-libalgorithm-diff-xs-perl_0.04-8build3_amd64.deb ...
+Unpacking libalgorithm-diff-xs-perl:amd64 (0.04-8build3) ...
+Selecting previously unselected package libalgorithm-merge-perl.
+Preparing to unpack .../57-libalgorithm-merge-perl_0.08-5_all.deb ...
+Unpacking libalgorithm-merge-perl (0.08-5) ...
+Selecting previously unselected package libaom3:amd64.
+Preparing to unpack .../58-libaom3_3.8.2-2ubuntu0.2_amd64.deb ...
+Unpacking libaom3:amd64 (3.8.2-2ubuntu0.2) ...
+Selecting previously unselected package libfontconfig1:amd64.
+Preparing to unpack .../59-libfontconfig1_2.15.0-1.1ubuntu2_amd64.deb ...
+Unpacking libfontconfig1:amd64 (2.15.0-1.1ubuntu2) ...
+Selecting previously unselected package libsharpyuv0:amd64.
+Preparing to unpack .../60-libsharpyuv0_1.3.2-0.4build3_amd64.deb ...
+Unpacking libsharpyuv0:amd64 (1.3.2-0.4build3) ...
+Selecting previously unselected package libheif-plugin-aomdec:amd64.
+Preparing to unpack .../61-libheif-plugin-aomdec_1.17.6-1ubuntu4.9_amd64.deb ...
+Unpacking libheif-plugin-aomdec:amd64 (1.17.6-1ubuntu4.9) ...
+Selecting previously unselected package libheif1:amd64.
+Preparing to unpack .../62-libheif1_1.17.6-1ubuntu4.9_amd64.deb ...
+Unpacking libheif1:amd64 (1.17.6-1ubuntu4.9) ...
+Selecting previously unselected package libjpeg-turbo8:amd64.
+Preparing to unpack .../63-libjpeg-turbo8_2.1.5-2ubuntu2_amd64.deb ...
+Unpacking libjpeg-turbo8:amd64 (2.1.5-2ubuntu2) ...
+Selecting previously unselected package libjpeg8:amd64.
+Preparing to unpack .../64-libjpeg8_8c-2ubuntu11_amd64.deb ...
+Unpacking libjpeg8:amd64 (8c-2ubuntu11) ...
+Selecting previously unselected package libdeflate0:amd64.
+Preparing to unpack .../65-libdeflate0_1.19-1build1.1_amd64.deb ...
+Unpacking libdeflate0:amd64 (1.19-1build1.1) ...
+Selecting previously unselected package libjbig0:amd64.
+Preparing to unpack .../66-libjbig0_2.1-6.1ubuntu2_amd64.deb ...
+Unpacking libjbig0:amd64 (2.1-6.1ubuntu2) ...
+Selecting previously unselected package liblerc4:amd64.
+Preparing to unpack .../67-liblerc4_4.0.0+ds-4ubuntu2_amd64.deb ...
+Unpacking liblerc4:amd64 (4.0.0+ds-4ubuntu2) ...
+Selecting previously unselected package libwebp7:amd64.
+Preparing to unpack .../68-libwebp7_1.3.2-0.4build3_amd64.deb ...
+Unpacking libwebp7:amd64 (1.3.2-0.4build3) ...
+Selecting previously unselected package libtiff6:amd64.
+Preparing to unpack .../69-libtiff6_4.5.1+git230720-4ubuntu2.5_amd64.deb ...
+Unpacking libtiff6:amd64 (4.5.1+git230720-4ubuntu2.5) ...
+Selecting previously unselected package libxpm4:amd64.
+Preparing to unpack .../70-libxpm4_1%3a3.5.17-1ubuntu0.24.04.2_amd64.deb ...
+Unpacking libxpm4:amd64 (1:3.5.17-1ubuntu0.24.04.2) ...
+Selecting previously unselected package libgd3:amd64.
+Preparing to unpack .../71-libgd3_2.3.3-9ubuntu5_amd64.deb ...
+Unpacking libgd3:amd64 (2.3.3-9ubuntu5) ...
+Selecting previously unselected package libc-devtools.
+Preparing to unpack .../72-libc-devtools_2.39-0ubuntu8.9_amd64.deb ...
+Unpacking libc-devtools (2.39-0ubuntu8.9) ...
+Selecting previously unselected package libfile-fcntllock-perl.
+Preparing to unpack .../73-libfile-fcntllock-perl_0.22-4ubuntu5_amd64.deb ...
+Unpacking libfile-fcntllock-perl (0.22-4ubuntu5) ...
+Selecting previously unselected package libheif-plugin-aomenc:amd64.
+Preparing to unpack .../74-libheif-plugin-aomenc_1.17.6-1ubuntu4.9_amd64.deb ...
+Unpacking libheif-plugin-aomenc:amd64 (1.17.6-1ubuntu4.9) ...
+Selecting previously unselected package manpages-dev.
+Preparing to unpack .../75-manpages-dev_6.7-2_all.deb ...
+Unpacking manpages-dev (6.7-2) ...
+Selecting previously unselected package ninja-build.
+Preparing to unpack .../76-ninja-build_1.11.1-2_amd64.deb ...
+Unpacking ninja-build (1.11.1-2) ...
+Setting up libsharpyuv0:amd64 (1.3.2-0.4build3) ...
+Setting up libaom3:amd64 (3.8.2-2ubuntu0.2) ...
+Setting up manpages-dev (6.7-2) ...
+Setting up lto-disabled-list (47) ...
+Setting up liblerc4:amd64 (4.0.0+ds-4ubuntu2) ...
+Setting up libxpm4:amd64 (1:3.5.17-1ubuntu0.24.04.2) ...
+Setting up libfile-fcntllock-perl (0.22-4ubuntu5) ...
+Setting up libalgorithm-diff-perl (1.201-1) ...
+Setting up binutils-common:amd64 (2.42-4ubuntu2.10) ...
+Setting up libdeflate0:amd64 (1.19-1build1.1) ...
+Setting up linux-libc-dev:amd64 (6.8.0-147.147) ...
+Setting up libctf-nobfd0:amd64 (2.42-4ubuntu2.10) ...
+Setting up libgomp1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up bzip2 (1.0.8-5.1ubuntu0.1) ...
+Setting up libjbig0:amd64 (2.1-6.1ubuntu2) ...
+Setting up libsframe1:amd64 (2.42-4ubuntu2.10) ...
+Setting up libfakeroot:amd64 (1.33-1) ...
+Setting up ninja-build (1.11.1-2) ...
+Setting up fakeroot (1.33-1) ...
+update-alternatives: using /usr/bin/fakeroot-sysv to provide /usr/bin/fakeroot (fakeroot) in auto mode
+Setting up rpcsvc-proto (1.4.2-0ubuntu7) ...
+Setting up gcc-13-base:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up make (4.3-4.1build2) ...
+Setting up libquadmath0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up fonts-dejavu-mono (2.37-8) ...
+Setting up libmpc3:amd64 (1.3.1-1build1.1) ...
+Setting up libatomic1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libjsoncpp25:amd64 (1.9.5-6build1) ...
+Setting up fonts-dejavu-core (2.37-8) ...
+Setting up libjpeg-turbo8:amd64 (2.1.5-2ubuntu2) ...
+Setting up libdpkg-perl (1.22.6ubuntu6.6) ...
+Setting up libwebp7:amd64 (1.3.2-0.4build3) ...
+Setting up libubsan1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libhwasan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up librhash0:amd64 (1.4.3-3build1) ...
+Setting up libcrypt-dev:amd64 (1:4.4.36-4build1) ...
+Setting up libasan8:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up cmake-data (3.28.3-1build7) ...
+Setting up libtsan2:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libbinutils:amd64 (2.42-4ubuntu2.10) ...
+Setting up libisl23:amd64 (0.26-3build1.1) ...
+Setting up libc-dev-bin (2.39-0ubuntu8.9) ...
+Setting up libalgorithm-diff-xs-perl:amd64 (0.04-8build3) ...
+Setting up libcc1-0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up liblsan0:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libitm1:amd64 (14.2.0-4ubuntu2~24.04.1) ...
+Setting up libalgorithm-merge-perl (0.08-5) ...
+Setting up libctf0:amd64 (2.42-4ubuntu2.10) ...
+Setting up libjpeg8:amd64 (8c-2ubuntu11) ...
+Setting up cpp-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up fontconfig-config (2.15.0-1.1ubuntu2) ...
+Setting up libgprofng0:amd64 (2.42-4ubuntu2.10) ...
+Setting up libgcc-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up libtiff6:amd64 (4.5.1+git230720-4ubuntu2.5) ...
+Setting up cmake (3.28.3-1build7) ...
+Setting up libc6-dev:amd64 (2.39-0ubuntu8.9) ...
+Setting up libstdc++-13-dev:amd64 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up binutils-x86-64-linux-gnu (2.42-4ubuntu2.10) ...
+Setting up cpp-x86-64-linux-gnu (4:13.2.0-7ubuntu1) ...
+Setting up cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up gcc-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up binutils (2.42-4ubuntu2.10) ...
+Setting up dpkg-dev (1.22.6ubuntu6.6) ...
+Setting up gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up cpp (4:13.2.0-7ubuntu1) ...
+Setting up g++-13-x86-64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+Setting up gcc-x86-64-linux-gnu (4:13.2.0-7ubuntu1) ...
+Setting up gcc (4:13.2.0-7ubuntu1) ...
+Setting up g++-x86-64-linux-gnu (4:13.2.0-7ubuntu1) ...
+Setting up g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up g++ (4:13.2.0-7ubuntu1) ...
+update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+Setting up build-essential (12.10ubuntu1) ...
+Setting up libheif-plugin-aomdec:amd64 (1.17.6-1ubuntu4.9) ...
+Setting up libheif1:amd64 (1.17.6-1ubuntu4.9) ...
+Setting up libheif-plugin-aomenc:amd64 (1.17.6-1ubuntu4.9) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for sgml-base (1.31) ...
+Setting up libfontconfig1:amd64 (2.15.0-1.1ubuntu2) ...
+Setting up libgd3:amd64 (2.3.3-9ubuntu5) ...
+Setting up libc-devtools (2.39-0ubuntu8.9) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
++ git clone https://github.com/krogdorlok/nexus-lob /opt/nexus
+Cloning into '/opt/nexus'...
++ cd /opt/nexus
++ git checkout 41193ee60a43886a66ec71b2c33ee97c8a541df5
+Note: switching to '41193ee60a43886a66ec71b2c33ee97c8a541df5'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 41193ee docs: call latency first-response latency, document the AWS lab
++ CC=gcc-13
++ CXX=g++-13
++ REPS=5
++ REQUIRE_PERF=1
++ scripts/aws/remote_bench.sh s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z
+kernel.perf_event_paranoid = 1
+== 00:51:23 build
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/g++-13 - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The C compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/gcc-13 - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Failed to find LLVM FileCheck
+-- Found Git: /usr/bin/git (found version "2.43.0") 
+-- Google Benchmark version: v1.9.1, normalized to 1.9.1
+-- Looking for shm_open in rt
+-- Looking for shm_open in rt - found
+-- Performing Test HAVE_CXX_FLAG_WALL
+-- Performing Test HAVE_CXX_FLAG_WALL - Success
+-- Performing Test HAVE_CXX_FLAG_WEXTRA
+-- Performing Test HAVE_CXX_FLAG_WEXTRA - Success
+-- Performing Test HAVE_CXX_FLAG_WSHADOW
+-- Performing Test HAVE_CXX_FLAG_WSHADOW - Success
+-- Performing Test HAVE_CXX_FLAG_WFLOAT_EQUAL
+-- Performing Test HAVE_CXX_FLAG_WFLOAT_EQUAL - Success
+-- Performing Test HAVE_CXX_FLAG_WOLD_STYLE_CAST
+-- Performing Test HAVE_CXX_FLAG_WOLD_STYLE_CAST - Success
+-- Performing Test HAVE_CXX_FLAG_WCONVERSION
+-- Performing Test HAVE_CXX_FLAG_WCONVERSION - Success
+-- Performing Test HAVE_CXX_FLAG_WSUGGEST_OVERRIDE
+-- Performing Test HAVE_CXX_FLAG_WSUGGEST_OVERRIDE - Success
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC - Success
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC_ERRORS
+-- Performing Test HAVE_CXX_FLAG_PEDANTIC_ERRORS - Success
+-- Performing Test HAVE_CXX_FLAG_WSHORTEN_64_TO_32
+-- Performing Test HAVE_CXX_FLAG_WSHORTEN_64_TO_32 - Failed
+-- Performing Test HAVE_CXX_FLAG_FSTRICT_ALIASING
+-- Performing Test HAVE_CXX_FLAG_FSTRICT_ALIASING - Success
+-- Performing Test HAVE_CXX_FLAG_WNO_DEPRECATED_DECLARATIONS
+-- Performing Test HAVE_CXX_FLAG_WNO_DEPRECATED_DECLARATIONS - Success
+-- Performing Test HAVE_CXX_FLAG_WSTRICT_ALIASING
+-- Performing Test HAVE_CXX_FLAG_WSTRICT_ALIASING - Success
+-- Performing Test HAVE_CXX_FLAG_WD654
+-- Performing Test HAVE_CXX_FLAG_WD654 - Failed
+-- Performing Test HAVE_CXX_FLAG_WTHREAD_SAFETY
+-- Performing Test HAVE_CXX_FLAG_WTHREAD_SAFETY - Failed
+-- Performing Test HAVE_CXX_FLAG_COVERAGE
+-- Performing Test HAVE_CXX_FLAG_COVERAGE - Success
+-- Compiling and running to test HAVE_STD_REGEX
+-- Performing Test HAVE_STD_REGEX -- success
+-- Compiling and running to test HAVE_GNU_POSIX_REGEX
+-- Performing Test HAVE_GNU_POSIX_REGEX -- failed to compile
+-- Compiling and running to test HAVE_POSIX_REGEX
+-- Performing Test HAVE_POSIX_REGEX -- success
+-- Compiling and running to test HAVE_STEADY_CLOCK
+-- Performing Test HAVE_STEADY_CLOCK -- success
+-- Compiling and running to test HAVE_PTHREAD_AFFINITY
+-- Performing Test HAVE_PTHREAD_AFFINITY -- success
+-- Configuring done (4.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /opt/nexus/build/bench
+[1/57] Building CXX object CMakeFiles/nexus_app.dir/src/flow_generator.cpp.o
+[2/57] Building CXX object CMakeFiles/nexus_lob.dir/src/main.cpp.o
+[3/57] Building CXX object CMakeFiles/test_pool.dir/tests/test_pool.cpp.o
+[4/57] Building CXX object CMakeFiles/nexus_app.dir/src/pipeline.cpp.o
+[5/57] Linking CXX static library libnexus_app.a
+[6/57] Linking CXX executable nexus_lob
+[7/57] Building CXX object CMakeFiles/test_price_level.dir/tests/test_price_level.cpp.o
+[8/57] Building CXX object CMakeFiles/test_order_map.dir/tests/test_order_map.cpp.o
+[9/57] Building CXX object CMakeFiles/test_ladder.dir/tests/test_ladder.cpp.o
+[10/57] Building CXX object CMakeFiles/test_spsc.dir/tests/test_spsc.cpp.o
+[11/57] Building CXX object CMakeFiles/test_matching.dir/tests/test_matching.cpp.o
+[12/57] Building CXX object CMakeFiles/test_no_alloc.dir/tests/test_no_alloc.cpp.o
+In function ‘void operator delete(void*, size_t)’,
+    inlined from ‘std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...) [with _Tp = nexus::MatchingEngine<2>; _Args = {int, int}]’ at /usr/include/c++/13/bits/unique_ptr.h:1070:30,
+    inlined from ‘virtual void {anonymous}::NoAlloc_RejectAndRemainderPathsDoNotAllocate_Test::TestBody()’ at /opt/nexus/tests/test_no_alloc.cpp:206:61:
+/opt/nexus/tests/test_no_alloc.cpp:77:59: warning: ‘void free(void*)’ called on pointer returned from a mismatched allocation function [-Wmismatched-new-delete]
+   77 | void operator delete(void* p, size_t) noexcept { std::free(p); }
+      |                                                  ~~~~~~~~~^~~
+In file included from /usr/include/c++/13/memory:78,
+                 from /opt/nexus/build/bench/_deps/googletest-src/googletest/include/gtest/gtest.h:55,
+                 from /opt/nexus/tests/test_no_alloc.cpp:4:
+In function ‘std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...) [with _Tp = nexus::MatchingEngine<2>; _Args = {int, int}]’,
+    inlined from ‘virtual void {anonymous}::NoAlloc_RejectAndRemainderPathsDoNotAllocate_Test::TestBody()’ at /opt/nexus/tests/test_no_alloc.cpp:206:61:
+/usr/include/c++/13/bits/unique_ptr.h:1070:30: note: returned from ‘void* operator new(size_t)’
+ 1070 |     { return unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+      |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘void operator delete(void*, size_t)’,
+    inlined from ‘std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...) [with _Tp = nexus::MatchingEngine<16384>; _Args = {int, int}]’ at /usr/include/c++/13/bits/unique_ptr.h:1070:30,
+    inlined from ‘virtual void {anonymous}::NoAlloc_MillionMixedCommandsAfterWarmup_Test::TestBody()’ at /opt/nexus/tests/test_no_alloc.cpp:238:70:
+/opt/nexus/tests/test_no_alloc.cpp:77:59: warning: ‘void free(void*)’ called on pointer returned from a mismatched allocation function [-Wmismatched-new-delete]
+   77 | void operator delete(void* p, size_t) noexcept { std::free(p); }
+      |                                                  ~~~~~~~~~^~~
+In function ‘std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...) [with _Tp = nexus::MatchingEngine<16384>; _Args = {int, int}]’,
+    inlined from ‘virtual void {anonymous}::NoAlloc_MillionMixedCommandsAfterWarmup_Test::TestBody()’ at /opt/nexus/tests/test_no_alloc.cpp:238:70:
+/usr/include/c++/13/bits/unique_ptr.h:1070:30: note: returned from ‘void* operator new(size_t)’
+ 1070 |     { return unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+      |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function ‘void operator delete(void*, size_t)’,
+    inlined from ‘std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...) [with _Tp = nexus::MatchingEngine<16384>; _Args = {int, int}]’ at /usr/include/c++/13/bits/unique_ptr.h:1070:30,
+    inlined from ‘virtual void {anonymous}::NoAlloc_FullDataPathAfterWarmup_Test::TestBody()’ at /opt/nexus/tests/test_no_alloc.cpp:262:70:
+/opt/nexus/tests/test_no_alloc.cpp:77:59: warning: ‘void free(void*)’ called on pointer returned from a mismatched allocation function [-Wmismatched-new-delete]
+   77 | void operator delete(void* p, size_t) noexcept { std::free(p); }
+      |                                                  ~~~~~~~~~^~~
+In function ‘std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...) [with _Tp = nexus::MatchingEngine<16384>; _Args = {int, int}]’,
+    inlined from ‘virtual void {anonymous}::NoAlloc_FullDataPathAfterWarmup_Test::TestBody()’ at /opt/nexus/tests/test_no_alloc.cpp:262:70:
+/usr/include/c++/13/bits/unique_ptr.h:1070:30: note: returned from ‘void* operator new(size_t)’
+ 1070 |     { return unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+      |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[13/57] Building CXX object CMakeFiles/fuzz_differential.dir/tests/fuzz_differential.cpp.o
+[14/57] Building CXX object CMakeFiles/test_pipeline.dir/tests/test_pipeline.cpp.o
+[15/57] Linking CXX executable fuzz_differential
+[16/57] Building CXX object CMakeFiles/bench_micro.dir/benchmarks/bench_micro.cpp.o
+[17/57] Building CXX object _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o
+[18/57] Building CXX object CMakeFiles/bench_e2e.dir/benchmarks/bench_e2e.cpp.o
+[19/57] Linking CXX executable bench_e2e
+[20/57] Building CXX object _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o
+[21/57] Building CXX object _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[22/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/benchmark_api_internal.cc.o
+[23/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/benchmark_name.cc.o
+[24/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/benchmark.cc.o
+[25/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/benchmark_runner.cc.o
+[26/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/benchmark_register.cc.o
+[27/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/check.cc.o
+[28/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/colorprint.cc.o
+[29/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/commandlineflags.cc.o
+[30/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/complexity.cc.o
+[31/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/console_reporter.cc.o
+[32/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/counter.cc.o
+[33/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/csv_reporter.cc.o
+[34/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/json_reporter.cc.o
+[35/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/perf_counters.cc.o
+[36/57] Building CXX object _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[37/57] Linking CXX static library lib/libgtest.a
+[38/57] Linking CXX static library lib/libgmock.a
+[39/57] Linking CXX static library lib/libgmock_main.a
+[40/57] Linking CXX static library lib/libgtest_main.a
+[41/57] Linking CXX executable test_pool
+[42/57] Linking CXX executable test_order_map
+[43/57] Linking CXX executable test_ladder
+[44/57] Linking CXX executable test_price_level
+[45/57] Linking CXX executable test_matching
+[46/57] Linking CXX executable test_no_alloc
+[47/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/reporter.cc.o
+[48/57] Linking CXX executable test_spsc
+[49/57] Linking CXX executable test_pipeline
+[50/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/string_util.cc.o
+[51/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/statistics.cc.o
+[52/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/timers.cc.o
+[53/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark_main.dir/benchmark_main.cc.o
+[54/57] Building CXX object _deps/benchmark-build/src/CMakeFiles/benchmark.dir/sysinfo.cc.o
+[55/57] Linking CXX static library _deps/benchmark-build/src/libbenchmark.a
+[56/57] Linking CXX static library _deps/benchmark-build/src/libbenchmark_main.a
+[57/57] Linking CXX executable bench_micro
+== 00:52:20 tests
+Internal ctest changing into directory: /opt/nexus/build/bench
+Test project /opt/nexus/build/bench
+    Start 1: test_pool
+1/9 Test #1: test_pool ........................   Passed    0.00 sec
+    Start 2: test_order_map
+2/9 Test #2: test_order_map ...................   Passed    0.01 sec
+    Start 3: test_ladder
+3/9 Test #3: test_ladder ......................   Passed    0.03 sec
+    Start 4: test_price_level
+4/9 Test #4: test_price_level .................   Passed    0.00 sec
+    Start 5: test_matching
+5/9 Test #5: test_matching ....................   Passed    0.00 sec
+    Start 6: test_no_alloc
+6/9 Test #6: test_no_alloc ....................   Passed    0.18 sec
+    Start 7: test_spsc
+7/9 Test #7: test_spsc ........................   Passed    0.02 sec
+    Start 8: test_pipeline
+8/9 Test #8: test_pipeline ....................   Passed    1.21 sec
+    Start 9: fuzz_differential
+9/9 Test #9: fuzz_differential ................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   1.53 sec
+date: 2026-10-26T00:52:21Z
+commit: 41193ee
+os: Linux 7.0.0-1014-aws x86_64
+cpu: Intel(R) Xeon(R) Platinum 8488C
+logical cpus: 2
+memory: 3.7 GiB
+governor: n/a
+perf: perf version 7.0.14
+compiler: /usr/bin/g++-13 (g++-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0)
+flags: release preset, -O3 -march=native
+== 00:52:22 fuzz and mutation check
+fuzz_differential: 200 seeds x 100000 commands, all identical
+  events: accepted=9153618 fill=7420854 cancelled=1522909 modified=343834 rejected=10056743
+  rejects: dup=42412 unknown=8051674 band=403878 zero=150749 pool=479300 fok=928730
+  modifies that crossed and filled: 90496
+ok: unmutated engine -> pass (fuzz_differential: 8 seeds x 20000 commands, all identical)
+ok: modify keeps priority on quantity increase -> fail (MISMATCH seed=2 command=17245 cap=4096 band=[5000,5300])
+ok: FOK fillability off by one -> fail (MISMATCH seed=1 command=171 cap=16 band=[1,64])
+ok: market remainder not cancelled -> fail (MISMATCH seed=1 command=15 cap=16 band=[1,64])
+ok: sweep stops early -> fail (MISMATCH seed=1 command=122 cap=16 band=[1,64])
+== 00:52:36 micro benchmarks
+2026-10-26T00:52:36+00:00
+Running build/bench/bench_micro
+Run on (2 X 2400 MHz CPU s)
+CPU Caches:
+  L1 Data 48 KiB (x1)
+  L1 Instruction 32 KiB (x1)
+  L2 Unified 2048 KiB (x1)
+  L3 Unified 107520 KiB (x1)
+Load Average: 1.75, 0.62, 0.22
+-----------------------------------------------------------------------------------
+Benchmark                         Time             CPU   Iterations UserCounters...
+-----------------------------------------------------------------------------------
+AddPassive/nexus_mean        107603 ns       107226 ns            5 items_per_second=38.2134M/s
+AddPassive/nexus_median      107545 ns       107145 ns            5 items_per_second=38.2286M/s
+AddPassive/nexus_stddev        2266 ns         2253 ns            5 items_per_second=813.65k/s
+AddPassive/nexus_cv            2.11 %          2.10 %             5 items_per_second=2.13%
+AddPassive/naive_mean        289354 ns       289346 ns            5 items_per_second=14.1562M/s
+AddPassive/naive_median      289383 ns       289364 ns            5 items_per_second=14.1552M/s
+AddPassive/naive_stddev         811 ns          809 ns            5 items_per_second=39.4879k/s
+AddPassive/naive_cv            0.28 %          0.28 %             5 items_per_second=0.28%
+Cancel/nexus_mean             51139 ns        50638 ns            5 items_per_second=80.9236M/s
+Cancel/nexus_median           50483 ns        49990 ns            5 items_per_second=81.936M/s
+Cancel/nexus_stddev            1192 ns         1195 ns            5 items_per_second=1.89271M/s
+Cancel/nexus_cv                2.33 %          2.36 %             5 items_per_second=2.34%
+Cancel/naive_mean            333762 ns       333718 ns            5 items_per_second=12.2739M/s
+Cancel/naive_median          333780 ns       333729 ns            5 items_per_second=12.2734M/s
+Cancel/naive_stddev             959 ns          959 ns            5 items_per_second=35.2793k/s
+Cancel/naive_cv                0.29 %          0.29 %             5 items_per_second=0.29%
+ModifyPrice/nexus_mean        61101 ns        60568 ns            5 items_per_second=67.6376M/s
+ModifyPrice/nexus_median      61372 ns        60818 ns            5 items_per_second=67.3489M/s
+ModifyPrice/nexus_stddev        852 ns          856 ns            5 items_per_second=961.903k/s
+ModifyPrice/nexus_cv           1.39 %          1.41 %             5 items_per_second=1.42%
+ModifyPrice/naive_mean       289748 ns       289702 ns            5 items_per_second=14.1387M/s
+ModifyPrice/naive_median     289377 ns       289345 ns            5 items_per_second=14.1561M/s
+ModifyPrice/naive_stddev        782 ns          773 ns            5 items_per_second=37.6092k/s
+ModifyPrice/naive_cv           0.27 %          0.27 %             5 items_per_second=0.27%
+Sweep/nexus/1_mean             7094 ns         6626 ns            5 items_per_second=38.6341M/s
+Sweep/nexus/1_median           7089 ns         6623 ns            5 items_per_second=38.6551M/s
+Sweep/nexus/1_stddev           47.4 ns         33.1 ns            5 items_per_second=192.39k/s
+Sweep/nexus/1_cv               0.67 %          0.50 %             5 items_per_second=0.50%
+Sweep/nexus/8_mean            33982 ns        33493 ns            5 items_per_second=7.64353M/s
+Sweep/nexus/8_median          33905 ns        33427 ns            5 items_per_second=7.65848M/s
+Sweep/nexus/8_stddev            162 ns          146 ns            5 items_per_second=33.1334k/s
+Sweep/nexus/8_cv               0.48 %          0.44 %             5 items_per_second=0.43%
+Sweep/nexus/64_mean          288640 ns       288302 ns            5 items_per_second=887.985k/s
+Sweep/nexus/64_median        288508 ns       288183 ns            5 items_per_second=888.326k/s
+Sweep/nexus/64_stddev          1779 ns         1794 ns            5 items_per_second=5.51103k/s
+Sweep/nexus/64_cv              0.62 %          0.62 %             5 items_per_second=0.62%
+Sweep/naive/1_mean            12761 ns        12745 ns            5 items_per_second=20.0871M/s
+Sweep/naive/1_median          12722 ns        12707 ns            5 items_per_second=20.147M/s
+Sweep/naive/1_stddev           82.5 ns         82.0 ns            5 items_per_second=128.349k/s
+Sweep/naive/1_cv               0.65 %          0.64 %             5 items_per_second=0.64%
+Sweep/naive/8_mean            84636 ns        84610 ns            5 items_per_second=3.02564M/s
+Sweep/naive/8_median          84639 ns        84613 ns            5 items_per_second=3.02553M/s
+Sweep/naive/8_stddev            179 ns          182 ns            5 items_per_second=6.50293k/s
+Sweep/naive/8_cv               0.21 %          0.21 %             5 items_per_second=0.21%
+Sweep/naive/64_mean          676495 ns       676401 ns            5 items_per_second=378.486k/s
+Sweep/naive/64_median        676746 ns       676653 ns            5 items_per_second=378.333k/s
+Sweep/naive/64_stddev          4329 ns         4337 ns            5 items_per_second=2.42116k/s
+Sweep/naive/64_cv              0.64 %          0.64 %             5 items_per_second=0.64%
+== 01:36:52 replay
+replay: 10000000 commands, 15812664 events, 24077216 commands/s
+replay: 10000000 commands, 15812664 events, 9206808 commands/s
+replay: 10000000 commands, 15812664 events, 23826793 commands/s
+replay: 10000000 commands, 15812664 events, 9093191 commands/s
+replay: 10000000 commands, 15812664 events, 24119147 commands/s
+replay: 10000000 commands, 15812664 events, 9171481 commands/s
+replay: 10000000 commands, 15812664 events, 24472217 commands/s
+replay: 10000000 commands, 15812664 events, 9127389 commands/s
+replay: 10000000 commands, 15812664 events, 22595198 commands/s
+replay: 10000000 commands, 15812664 events, 9262483 commands/s
+== 01:37:02 pipeline
+skipped: this machine has 2 logical CPUs; the pipeline needs 3 dedicated cores
+== 01:37:02 hardware counters
+this machine exposes no hardware performance counters to perf:
+Error:
+No supported events found.
+The cycles event is not supported.
+== 01:37:02 results table
+README results table updated
+Completed 280 Bytes/29.4 KiB (1.7 KiB/s) with 9 file(s) remainingCompleted 580 Bytes/29.4 KiB (3.6 KiB/s) with 9 file(s) remainingupload: results/fuzz.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/fuzz.txt
+Completed 580 Bytes/29.4 KiB (3.6 KiB/s) with 8 file(s) remainingupload: results/machine.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/machine.txt
+Completed 580 Bytes/29.4 KiB (3.6 KiB/s) with 7 file(s) remainingCompleted 900 Bytes/29.4 KiB (5.4 KiB/s) with 7 file(s) remainingCompleted 1.0 KiB/29.4 KiB (6.2 KiB/s) with 7 file(s) remaining  upload: results/perf_unavailable.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/perf_unavailable.txt
+Completed 1.0 KiB/29.4 KiB (6.2 KiB/s) with 6 file(s) remainingupload: results/replay_nexus.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/replay_nexus.txt
+Completed 1.0 KiB/29.4 KiB (6.2 KiB/s) with 5 file(s) remainingCompleted 1.3 KiB/29.4 KiB (7.9 KiB/s) with 5 file(s) remainingupload: results/replay_naive.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/replay_naive.txt
+Completed 1.3 KiB/29.4 KiB (7.9 KiB/s) with 4 file(s) remainingCompleted 5.8 KiB/29.4 KiB (32.1 KiB/s) with 4 file(s) remainingupload: results/manifest.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/manifest.txt
+Completed 5.8 KiB/29.4 KiB (32.1 KiB/s) with 3 file(s) remainingCompleted 5.9 KiB/29.4 KiB (31.3 KiB/s) with 3 file(s) remainingupload: results/e2e_skipped.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/e2e_skipped.txt
+Completed 5.9 KiB/29.4 KiB (31.3 KiB/s) with 2 file(s) remainingCompleted 28.9 KiB/29.4 KiB (151.3 KiB/s) with 2 file(s) remainingupload: results/micro.json to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/micro.json
+Completed 28.9 KiB/29.4 KiB (151.3 KiB/s) with 1 file(s) remainingCompleted 29.4 KiB/29.4 KiB (149.4 KiB/s) with 1 file(s) remainingupload: results/mutation.txt to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/mutation.txt
+results copied to s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z
++ finish
++ rc=0
++ aws s3 cp /var/log/nexus-bench.log s3://nexus-lob-bench-696592800228-us-east-2/runs/c7i-flex.large/41193ee/20261026T005030Z/run.log

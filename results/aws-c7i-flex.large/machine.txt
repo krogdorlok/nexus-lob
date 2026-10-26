@@ -1,0 +1,10 @@
+date: 2026-10-26T00:52:21Z
+commit: 41193ee
+os: Linux 7.0.0-1014-aws x86_64
+cpu: Intel(R) Xeon(R) Platinum 8488C
+logical cpus: 2
+memory: 3.7 GiB
+governor: n/a
+perf: perf version 7.0.14
+compiler: /usr/bin/g++-13 (g++-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0)
+flags: release preset, -O3 -march=native

@@ -1,0 +1,4 @@
+this machine exposes no hardware performance counters to perf:
+Error:
+No supported events found.
+The cycles event is not supported.
