@@ -20,7 +20,9 @@ Every measured number below is copied from the cited file in `results/` (Apple M
   recorded into an allocation-free histogram. Investigating a stalled benchmark showed the
   ARM `cntvct_el0` counter stepping backwards on macOS, so I switched to the OS monotonic
   clock and added tests (cross-thread ping-pong, sleep and calibration) that fail on a broken
-  timer. Paced at 1M commands/s, median latency was 125 ns across two queue hops. *(results/e2e_nexus.json, results/e2e_naive.json)*
+  timer. Paced at 1M commands/s, median first-response latency (to the command's
+  acknowledgement) was 125 ns across two queue hops.
+  *(results/e2e_nexus.json, results/e2e_naive.json)*
 
 * **Proved correctness with an independently written reference engine and a differential
   fuzzer.** Hand-written tests miss interaction bugs between cancels, partial fills and

@@ -46,6 +46,11 @@ line, so on x86 walking a level costs one line per order. Apple M-series cores u
 lines; there two orders share a line, which is harmless because only the engine thread
 touches orders.
 
+The layout is the one specified for the project. Matching reads `id`, `price`, `qty`,
+`filled`, `side` and the links; `ts`, `type` and `tif` are written when an order rests but are
+not read by matching (a resting order is always a GTC limit). They are kept for auditability
+and to fill the line, which costs nothing because the size is fixed at 64 bytes anyway.
+
 ## Price level: intrusive doubly linked FIFO
 
 **Chosen:** `next`/`prev` pointers inside `Order`; `PriceLevel` holds head, tail, total
@@ -118,16 +123,20 @@ middle of matching.
 **Proof, not promise.** `test_no_alloc` replaces all replaceable global `operator new` and
 `operator delete` overloads (plain, array, aligned, nothrow, aligned nothrow, sized; on glibc
 also `malloc`/`calloc`/`realloc`) with counting versions, runs 1M mixed commands
-after warmup, and asserts zero allocations. A deterministic run covering every reject reason
-and every market-remainder path is counted the same way. A positive control proves the
-counter fires.
+after warmup, and asserts zero allocations. A second counted run covers the pipeline's whole
+per-command path single-threaded: timestamp, inbound SPSC push and pop, `process()`, every
+event through the outbound SPSC, and the latency histogram. A deterministic run covering
+every reject reason and every market-remainder path is counted the same way. A positive
+control proves the counter fires.
 
 ## SPSC ring: acquire/release, cached indices, padding
 
 The queue between threads is a classic Lamport ring with monotonically increasing 64-bit
 indices masked on access, so full (`head - tail == Cap`) and empty (`head == tail`) are
 unambiguous and unsigned wraparound is harmless (tested from just below 2^32 and just below
-2^64, and during a 10M-item two-thread run).
+2^64, and during a 10M-item two-thread run). "Lock-free" is a property of the target rather
+than of the C++ standard, so a `static_assert` on `std::atomic<size_t>::is_always_lock_free`
+refuses to build where the index atomics would fall back to a lock.
 
 **Memory ordering.** The producer writes the slot, then publishes `head` with
 `memory_order_release`; the consumer reads `head` with `acquire` before reading the slot.
@@ -146,11 +155,20 @@ line size: 128 bytes on Apple Silicon, 64 elsewhere.
 
 ## Timing
 
-**Latency definition.** For one command: `tsc_end()` taken by the publisher immediately after
-it dequeues that command's first event, minus the `tsc_begin()` stamp the producer wrote
-into the command just before pushing it to the inbound queue. This covers two queue hops plus
-matching. If the inbound queue is full, the wait counts, because the stamp is taken once
-before the first push attempt.
+**Latency definition: first response.** For one command: `tsc_end()` taken by the publisher
+immediately after it dequeues that command's first event, minus the `tsc_begin()` stamp the
+producer wrote into the command just before pushing it to the inbound queue. The first event
+is the acknowledgement (`Accepted`, which the engine emits after validation and before
+matching, or `Rejected`, `Cancelled`, `Modified`), so this is time to acknowledgement over
+two queue hops, not time until a trading order's last fill is published. That is the project
+specification's definition, and it is the number a trading client waits on first; matching
+cost is measured separately by throughput, replay and the micro benchmarks. If the inbound
+queue is full, the wait counts, because the stamp is taken once before the first push
+attempt.
+
+**Rejected: stamping the last event.** It would fold the fill count of each order into the
+latency, so a sweep across many levels and a passive add would no longer be comparable, and
+the engine would have to buffer each command's events to know which one is last.
 
 **Two runs, two questions.** Flood runs (the producer pushes as fast as the queues accept)
 measure throughput; their latency is dominated by queueing and is not reported. Paced runs
@@ -167,13 +185,13 @@ multi-socket machines need extra care, so run on a single socket.
 
 **Apple Silicon.** The obvious ARM choice, a user-space `cntvct_el0` read, was observed going
 backwards across a short sleep on macOS (the thread can resume on another core), so it is not
-usable there. macOS uses
-`mach_absolute_time()`, the OS-maintained monotonic counter. Its tick is coarse (the calibrated value is recorded as `ns_per_tick` in
-`results/e2e_<engine>.json`), so each latency sample on this platform is a whole number of ticks (the histogram itself is
-exact below 128 ticks and within 1.6% above). `test_pipeline` asserts that the timer advances
-across a sleep, calibrates to a plausible frequency, and never steps backwards in a 100k-round
-ping-pong between two threads, so a broken timer fails a test instead of silently producing
-numbers.
+usable there. macOS uses `mach_absolute_time()`, the OS-maintained monotonic counter. Its
+tick is coarse (the calibrated value is recorded as `ns_per_tick` in
+`results/e2e_<engine>.json`), so each latency sample on this platform is a whole number of
+ticks (the histogram itself is exact below 128 ticks and within 1.6% above).
+`test_pipeline` asserts that the timer advances across a sleep, calibrates to a plausible
+frequency, and never steps backwards in a 100k-round ping-pong between two threads, so a
+broken timer fails a test instead of silently producing numbers.
 
 ## Pinning and scheduling
 
@@ -183,14 +201,53 @@ L1/L2 warm; the producer and publisher are left to the scheduler. For lowest jit
 also isolate that core from the scheduler (`isolcpus`/`nohz_full`) and pin interrupts
 elsewhere. macOS has no affinity API, so the pipeline warns once and requests
 `QOS_CLASS_USER_INTERACTIVE`, which steers threads toward performance cores. All three threads
-spin rather than block: a blocked thread needs a wakeup that costs microseconds.
+spin rather than block: a blocked thread needs the scheduler to wake it, which adds a delay
+the program does not control.
+
+## Measurement infrastructure: EC2 and S3 on the free tier
+
+The laptop cannot give Linux x86 numbers or hardware counters, so `scripts/aws/` runs the
+benchmark suite on an EC2 instance and archives every run in S3.
+
+**EC2 as a disposable, self-destructing benchmark host.** Each run launches a fresh Ubuntu
+instance from a pushed commit, so nothing on the host carries over between runs. It is
+launched with shutdown behaviour "terminate", a hard shutdown deadline is scheduled at boot,
+and the boot script's exit trap uploads the log and shuts down on success or failure. The
+launcher terminates the instance on any local error or interrupt, and a client token makes a
+retried launch unable to start a second instance. **Rejected: GitHub Actions runners.**
+Shared virtual machines with no hardware counters and unknown neighbours. **Rejected: Spot.**
+It can reclaim the machine mid-run, which breaks comparability. **Rejected: a long-lived
+instance.** State and installed packages drift between runs, and it bills while idle.
+
+**S3 as the run history.** Runs land under `runs/<instance type>/<commit>/<time>/`, and the
+launcher compares each new run with the previous one of the same instance type, so a
+performance regression shows up as a flagged row. Versioning means a run can never silently
+overwrite another, and every run records its OS image and kernel so a cross-image comparison
+is flagged rather than mistaken for a code change. **Rejected: committing every run to git.**
+The repository should hold the curated results the README cites, not every experiment.
+
+**Least privilege.** The operator uses `aws login` (short-lived credentials, no stored keys).
+The instance has no SSH key, its security group allows no inbound traffic and only TCP 80
+and 443 outbound, metadata access requires IMDSv2 tokens, and its role can do exactly one
+thing: write objects under `runs/` in the results bucket. Every script is a dry run unless
+given `--apply`.
+
+**Counters are recorded or explained, never invented.** An earlier attempt stopped when `perf`
+on `c7i-flex.large` reported that it exposes no hardware performance counters at all, which
+matches AWS's documentation for small instance sizes (its log is archived in the results
+bucket). The scripts now treat that as an outcome: perf's message is written to
+`perf_unavailable.txt` instead of failing the run or printing a number. Counters need a
+whole-socket or metal instance, which is outside the free tier.
 
 ## Limitations
 
 * One instrument per engine; no self-trade prevention; no iceberg, stop or pegged orders.
 * The price band is fixed at construction.
 * Results committed in `results/` come from an Apple M2 laptop running a desktop session,
-  without pinning or core isolation; hardware counters need Linux with `perf`.
+  without pinning or core isolation. Hardware counters need Linux on a machine that exposes
+  them (bare metal or a whole-socket instance); the free-tier EC2 instance does not.
+* Not a hard real-time system: no `mlockall`, huge pages, real-time scheduling, NUMA policy
+  or interrupt routing, and a full outbound queue makes the engine spin until it drains.
 * The flow generator is synthetic, not a replay of real market data.
 
 ## Ten hard interview questions

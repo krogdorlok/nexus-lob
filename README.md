@@ -66,14 +66,20 @@ Options: `NEXUS_NATIVE` (`-march=native`), `NEXUS_ASAN`, `NEXUS_TSAN`, `NEXUS_WE
 
 ## How latency is measured
 
-**Latency** of a command is `tsc_end()` taken by the publisher immediately after it dequeues
-that command's first event, minus the `tsc_begin()` stamp the producer wrote into the command
-just before pushing it to the inbound queue. It covers both queue hops and matching. Ticks are
-converted to nanoseconds with a ratio calibrated against `steady_clock` at startup.
+**Latency** here is **first-response latency**: `tsc_end()` taken by the publisher immediately
+after it dequeues a command's *first* event, minus the `tsc_begin()` stamp the producer wrote
+into the command just before pushing it to the inbound queue. It covers the inbound queue hop,
+the engine reaching its first response, and the outbound queue hop. The first event is the
+acknowledgement: `Accepted` (emitted after validation, *before* matching), `Rejected`,
+`Cancelled` or `Modified`. So for an order that trades, the number measures time to the
+acknowledgement, not time until its last fill is published; the matching work itself shows up
+in throughput, replay and the micro benchmarks. Ticks are converted to nanoseconds with a
+ratio calibrated against `steady_clock` at startup.
 
-Throughput comes from **flood** runs (the producer pushes as fast as the queues accept);
-latency comes from **paced** runs on a fixed open-loop schedule, because flood latency only
-measures queue depth. Recording uses a fixed-bucket histogram, so it allocates nothing.
+Throughput comes from **flood** runs (the producer pushes as fast as the queues accept) and
+spans from the first measured push to the last command's first event; latency comes from
+**paced** runs on a fixed open-loop schedule, because flood latency only measures queue
+depth. Recording uses a fixed-bucket histogram, so it allocates nothing.
 
 ## Results
 
@@ -146,8 +152,8 @@ perf counters require Linux with perf (the intended target is x86_64); run `scri
 
 ## Linux x86 on AWS (free tier)
 
-The Mac cannot read hardware counters, so `scripts/aws/` runs the same suite on an EC2
-`c7i-flex.large` (Intel, free-tier eligible) and archives every run in S3 under
+The Mac has no `perf` and no Linux x86 numbers, so `scripts/aws/` runs the same suite on an
+EC2 `c7i-flex.large` (Intel Xeon, free-tier eligible) and archives every run in S3 under
 `runs/<instance type>/<commit>/<time>/`. After each run, `launch_bench.sh` downloads the
 previous archived run of the same instance type and writes a `compare_results.py` table to
 `results/aws-<type>/comparison.md`, so a performance regression shows up as a flagged row.
@@ -163,14 +169,32 @@ aws login --profile nexus                    # short-lived credentials, no store
 scripts/aws/setup.sh            # dry run: prints the bucket, role and security group it creates
 scripts/aws/setup.sh --apply
 scripts/aws/launch_bench.sh     # dry run: prints the launch command and the boot script
-scripts/aws/launch_bench.sh --apply          # about 30 minutes; fetches results/aws-<type>/
+scripts/aws/launch_bench.sh --apply          # fetches results/aws-<type>/; 90-minute deadline
 python3 scripts/make_results_table.py results/aws-c7i-flex.large RESULTS_AWS
 scripts/aws/teardown.sh --apply              # remove the role and security group afterwards
 ```
 
-With 2 vCPUs this instance cannot host the three spinning pipeline threads, so it skips the
-end-to-end benchmark and reports why; the remaining sections are measured there. The scripts
-refuse instance types that are not free-tier eligible unless `ALLOW_PAID=1` is set.
+What a run on the free-tier instance covers:
+
+* **Measured:** the differential fuzz, the mutation check, the micro benchmarks and the
+  single-threaded replay, on Intel instead of Apple Silicon.
+* **Skipped, with the reason written to `e2e_skipped.txt`:** the end-to-end pipeline. With 2
+  vCPUs the three spinning threads would share cores and measure the scheduler, not the
+  engine.
+* **Hardware counters, only if the instance exposes them.** If it does not, `perf`'s own
+  message is written to `perf_unavailable.txt` in place of counts. An earlier attempt on this
+  instance type stopped exactly there, with `perf` reporting "No supported events found. The
+  cycles event is not supported." (its log is archived in the results bucket under
+  `runs/c7i-flex.large/b9b1edf/`). AWS documents full counter access only for whole-socket
+  sizes (for example `c7i.24xlarge` and `c7i.48xlarge`) and metal instances, none of which are
+  on the free tier.
+
+The scripts refuse instance types that are not free-tier eligible unless `ALLOW_PAID=1` is
+set (which also needs an account on a paid plan). Pin `AMI=ami-...` to keep a comparison
+series on one OS image; every run records its image, kernel and instance type in
+`manifest.txt`, and comparisons across different images are flagged. Results that the README
+cites are committed to this repository after each run, so they outlive the free plan's
+six-month account.
 
 <!-- RESULTS_AWS -->
 Machine (`results/aws-c7i-flex.large/machine.txt`):
@@ -237,13 +261,22 @@ sensitive to which cores macOS assigns.
   separate them; the engine-only replay and the micro benchmarks do. Where min-to-max ranges
   overlap the table prints no ratio. Treat the e2e tail columns as a property of this
   machine until rerun on an isolated Linux core.
-* Hardware counters (`perf stat`) need Linux with perf; they are TBD until run there.
+* Hardware counters (`perf stat`) need Linux on a machine that exposes its performance
+  counters: bare metal or a whole-socket cloud instance. The free-tier instance does not, so
+  they remain unmeasured; see the AWS section.
+* This is not a hard real-time system. The hot path avoids allocation and pre-faults its
+  memory, but the process does not `mlockall`, use huge pages, set real-time scheduling,
+  control NUMA placement or route interrupts away from the engine core, and a full outbound
+  queue makes the engine spin until the publisher drains it.
 * One instrument per engine, a fixed price band, no self-trade prevention, no iceberg, stop
   or pegged orders. The flow is synthetic, not a market data replay.
 
 ## Reproduce on Linux x86_64
 
-On a quiet machine with `perf` (for example an AWS `c7i` instance):
+On a quiet Linux x86_64 machine. For hardware counters it must expose its performance
+counters to `perf`: bare metal, or a whole-socket cloud instance such as `c7i.24xlarge` (small
+VMs, including the free-tier ones, usually expose none, and the script then records that
+instead of counts):
 
 ```sh
 sudo apt-get install -y cmake ninja-build g++-13 linux-tools-common linux-tools-$(uname -r)
