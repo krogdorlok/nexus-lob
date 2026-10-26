@@ -2,15 +2,19 @@
 // Usage: nexus_lob [--engine nexus|naive] [--commands N] [--warmup N] [--rate R] [--cpu C]
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <memory>
 #include <string>
 
+#include "nexus/common/cli_args.hpp"
 #include "nexus/common/tsc.hpp"
 #include "pipeline.hpp"
 
 using namespace nexus;
 
-int main(int argc, char** argv) {
+namespace {
+
+int run(int argc, char** argv) {
   PipelineConfig cfg;
   std::string engine = "nexus";
   if (argc % 2 == 0) return std::fprintf(stderr, "every flag needs a value\n"), 2;
@@ -19,13 +23,13 @@ int main(int argc, char** argv) {
     if (k == "--engine")
       engine = v;
     else if (k == "--commands")
-      cfg.commands = std::strtoull(v.c_str(), nullptr, 10);
+      cfg.commands = parse_flag<uint64_t>(k, v);
     else if (k == "--warmup")
-      cfg.warmup = std::strtoull(v.c_str(), nullptr, 10);
+      cfg.warmup = parse_flag<uint64_t>(k, v);
     else if (k == "--rate")
-      cfg.rate = std::strtod(v.c_str(), nullptr);
+      cfg.rate = parse_flag<double>(k, v);
     else if (k == "--cpu")
-      cfg.engine_cpu = std::atoi(v.c_str());
+      cfg.engine_cpu = parse_flag<int>(k, v);
     else
       return std::fprintf(stderr, "unknown flag %s\n", k.c_str()), 2;
   }
@@ -53,4 +57,15 @@ int main(int argc, char** argv) {
               h.percentile(0.50) * ns, h.percentile(0.90) * ns, h.percentile(0.99) * ns,
               h.percentile(0.999) * ns, double(h.max()) * ns, ns);
   return 0;
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+  try {
+    return run(argc, argv);
+  } catch (const std::exception& e) {  // e.g. a pipeline configuration the engine rejects
+    std::fprintf(stderr, "error: %s\n", e.what());
+    return 2;
+  }
 }

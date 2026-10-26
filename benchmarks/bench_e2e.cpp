@@ -13,10 +13,12 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "nexus/common/cli_args.hpp"
 #include "nexus/common/tsc.hpp"
 #include "pipeline.hpp"
 
@@ -123,9 +125,7 @@ int replay(Engine& engine, uint64_t n, const FlowConfig& flow_cfg) {
   return 0;
 }
 
-}  // namespace
-
-int main(int argc, char** argv) {
+int run(int argc, char** argv) {
   PipelineConfig cfg;
   cfg.rate = 1e6;
   std::string engine = "both", out = "results", replay_engine;
@@ -136,15 +136,15 @@ int main(int argc, char** argv) {
     if (k == "--engine") {
       engine = v;
     } else if (k == "--reps") {
-      reps = std::atoi(v.c_str());
+      reps = parse_flag<int>(k, v);
     } else if (k == "--commands") {
-      cfg.commands = std::strtoull(v.c_str(), nullptr, 10);
+      cfg.commands = parse_flag<uint64_t>(k, v);
     } else if (k == "--warmup") {
-      cfg.warmup = std::strtoull(v.c_str(), nullptr, 10);
+      cfg.warmup = parse_flag<uint64_t>(k, v);
     } else if (k == "--rate") {
-      cfg.rate = std::strtod(v.c_str(), nullptr);
+      cfg.rate = parse_flag<double>(k, v);
     } else if (k == "--cpu") {
-      cfg.engine_cpu = std::atoi(v.c_str());
+      cfg.engine_cpu = parse_flag<int>(k, v);
     } else if (k == "--out") {
       out = v;
     } else if (k == "--replay") {
@@ -196,4 +196,15 @@ int main(int argc, char** argv) {
   if (do_nexus && !write_json(nexus, cfg, ns, out)) return 1;
   if (do_naive && !write_json(naive, cfg, ns, out)) return 1;
   return 0;
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+  try {
+    return run(argc, argv);
+  } catch (const std::exception& e) {  // e.g. a pipeline configuration the engine rejects
+    std::fprintf(stderr, "error: %s\n", e.what());
+    return 2;
+  }
 }

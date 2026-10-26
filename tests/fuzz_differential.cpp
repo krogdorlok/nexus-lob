@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "nexus/common/cli_args.hpp"
 #include "nexus/core/matching_engine.hpp"
 #include "reference/naive_engine.hpp"
 
@@ -148,7 +149,7 @@ int main(int argc, char** argv) {
   if (argc % 2 == 0) return std::fprintf(stderr, "every flag needs a value\n"), 2;
   for (int i = 1; i + 1 < argc; i += 2) {
     const std::string k = argv[i];
-    const uint64_t v = std::strtoull(argv[i + 1], nullptr, 10);
+    const uint64_t v = parse_flag<uint64_t>(k, argv[i + 1]);
     if (k == "--seeds")
       seeds = v;
     else if (k == "--commands")
