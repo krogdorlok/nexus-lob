@@ -1,8 +1,8 @@
 # NexusLOB design notes
 
 Each section names the decision, the alternative that was rejected, and why. Measured
-performance numbers live only in `results/`, the README table generated from it, and
-`RESUME.md`, which cites its files; this document explains mechanisms, not magnitudes.
+performance numbers live only in `results/` and the README tables generated from it; this
+document explains mechanisms, not magnitudes.
 
 ## Data flow
 
@@ -251,56 +251,3 @@ is outside the free tier.
 * Not a hard real-time system: no `mlockall`, huge pages, real-time scheduling, NUMA policy
   or interrupt routing, and a full outbound queue makes the engine spin until it drains.
 * The flow generator is synthetic, not a replay of real market data.
-
-## Ten hard interview questions
-
-1. **Why is cancel O(1) here, and what would make it O(n)?** The id map yields the `Order*`
-   and the level is a doubly linked intrusive list, so unlink touches two neighbours. With a
-   `std::vector` per level, cancel would need a search and an erase that shifts the tail.
-
-2. **How do you find the best price after the best level empties, without a stale cache?**
-   The best price is derived from the occupancy bitmap every time: mask the current `l0` word,
-   `countl_zero`/`countr_zero`, then fall back to the `l1` summary. Nothing is cached, so no
-   code path can forget to update it.
-
-3. **Why acquire/release and not relaxed or seq_cst in the SPSC queue?** Relaxed would let the
-   consumer see the new `head` before the slot write, and read garbage. `seq_cst` would add a
-   full fence for a global order that a two-thread handoff never needs. Release on publish plus
-   acquire on observe is the minimum that orders the slot write before the read.
-
-4. **What is false sharing and where does this code prevent it?** Two cores writing different
-   variables on one cache line invalidate each other's copy on every write. The SPSC
-   producer index, consumer index and buffer each start on their own line, with 128-byte
-   alignment on Apple Silicon where lines are 128 bytes.
-
-5. **How do you prove the hot path never allocates?** Replace every global allocation
-   function with a counting version, run a million mixed commands after warmup (plus a
-   deterministic pass over every reject and remainder path), and assert zero. A positive
-   control shows the counter works. Under sanitizers the test is skipped, because their
-   runtimes own the allocator.
-
-6. **Why calibrate the TSC instead of using the CPU frequency?** The TSC ticks at a fixed
-   reference rate that differs from the current core frequency under turbo or power saving.
-   Calibrating against `steady_clock` measures the real ratio. Cross-core use also requires
-   an invariant TSC (`constant_tsc`, `nonstop_tsc`, which the benchmark checks) that the
-   kernel has found synchronized across cores.
-
-7. **Your latency histogram never allocates; how accurate are its percentiles?** It is
-   log-linear: values below 128 ticks are exact; above that each power of two has 64 buckets,
-   so a reported percentile is at most about 1.6% above the true value, and never above the
-   true maximum.
-
-8. **How do you know the fast engine is correct?** An independently written naive engine
-   implements the same contract, and a differential fuzzer compares every event byte for byte
-   over 200 seeds of 100k commands (run in CI). It must also hit every reject reason, and a
-   scripted mutation check shows it catches injected bugs.
-
-9. **What happens when the pool is exhausted?** A Limit GTC order that might rest is rejected
-   with `PoolExhausted` before it touches the book. Orders that never rest (IOC, FOK, market)
-   are still accepted, and a modify reuses its own slot, so it cannot fail for lack of space.
-
-10. **Why does a modify that only shrinks quantity keep priority, while a price change loses
-    it?** Shrinking cannot disadvantage anyone behind you in the queue, so exchanges allow it
-    in place. A price change or a size increase is a new economic commitment, so it is a
-    cancel plus a new order: the order leaves the book first, so it can never match itself,
-    then re-enters as an aggressor and rests at the tail.
