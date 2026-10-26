@@ -1,4 +1,4 @@
-// Proves process() never touches the heap: all 12 replaceable global operator new/delete pairs
+// Proves the hot path never touches the heap: all 12 replaceable global operator new/delete pairs
 // (plain, array, aligned, nothrow, aligned nothrow, sized) are replaced with counting versions,
 // and a 1M-command mixed workload must leave the counter at zero.
 #include <gtest/gtest.h>
@@ -10,7 +10,10 @@
 #include <new>
 #include <vector>
 
+#include "nexus/common/histogram.hpp"
+#include "nexus/common/tsc.hpp"
 #include "nexus/core/matching_engine.hpp"
+#include "nexus/queue/spsc_ring_buffer.hpp"
 
 // On glibc, raw malloc/calloc/realloc are interposed and counted too. On macOS a definition in
 // the executable does not interpose libc, so only the C++ allocation functions are counted.
@@ -250,6 +253,37 @@ TEST(NoAlloc, MillionMixedCommandsAfterWarmup) {
   EXPECT_GT(events, 1'000'000u);
   EXPECT_GT(engine->live_orders(), 0u);
   EXPECT_EQ(rejects_pool, 0u);
+}
+
+// The pipeline's whole per-command path, single-threaded: stamp, inbound SPSC push and pop,
+// process(), every event through the outbound SPSC, and the latency histogram.
+TEST(NoAlloc, FullDataPathAfterWarmup) {
+  constexpr size_t kMaxLive = 1 << 14;
+  auto engine = std::make_unique<MatchingEngine<kMaxLive>>(1000, 2000);
+  auto in = std::make_unique<SPSCRingBuffer<Command, 1024>>();
+  auto out = std::make_unique<SPSCRingBuffer<Event, 1024>>();
+  auto hist = std::make_unique<LatencyHistogram>();
+  Workload flow(kMaxLive);
+  auto one_command = [&] {
+    Command c = flow.next();
+    c.ts = tsc_begin();
+    ASSERT_TRUE(in->push(c));
+    ASSERT_TRUE(in->pop(c));
+    engine->process(c, [&](const Event& e) { ASSERT_TRUE(out->push(e)); });
+    Event e;
+    while (out->pop(e)) {
+    }
+    hist->record(tsc_end() - c.ts);
+  };
+  for (int i = 0; i < 100'000; ++i) one_command();
+
+  g_allocs = 0;
+  g_counting = true;
+  for (int i = 0; i < 1'000'000; ++i) one_command();
+  g_counting = false;
+
+  EXPECT_EQ(g_allocs.load(), 0u);
+  EXPECT_EQ(hist->count(), 1'100'000u);
 }
 
 }  // namespace

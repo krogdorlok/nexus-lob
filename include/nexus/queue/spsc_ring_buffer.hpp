@@ -21,6 +21,9 @@ template <typename T, size_t Cap>
 class SPSCRingBuffer {
   static_assert(Cap && (Cap & (Cap - 1)) == 0, "Cap must be a power of 2");
   static_assert(std::is_trivially_copyable_v<T>);
+  // "Lock-free" is a property of the target, not of the C++ standard: refuse to build where
+  // the index atomics would fall back to a lock.
+  static_assert(std::atomic<size_t>::is_always_lock_free);
 
  public:
   SPSCRingBuffer() = default;
