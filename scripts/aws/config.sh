@@ -4,7 +4,8 @@
 PROFILE=${PROFILE:-nexus}
 REGION=${REGION:-us-east-2}
 INSTANCE_TYPE=${INSTANCE_TYPE:-c7i-flex.large}  # free-tier eligible; 2 vCPU Intel Sapphire Rapids
-MAX_MINUTES=${MAX_MINUTES:-75}                  # the instance shuts itself down by then, always
+MAX_MINUTES=${MAX_MINUTES:-90}                  # the instance shuts itself down by then, always
+AMI=${AMI:-}  # pin an image to keep a comparison series on one OS build; empty = latest
 REPO_URL=${REPO_URL:-https://github.com/krogdorlok/nexus-lob}
 NAME=nexus-lob-bench  # role, instance profile, security group and instance tag
 APPLY=0               # set to 1 by --apply; until then every mutating command is only printed

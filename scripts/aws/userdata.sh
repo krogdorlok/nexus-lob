@@ -10,6 +10,7 @@ BUCKET='__BUCKET__'
 PREFIX='__PREFIX__'
 COMMIT='__COMMIT__'
 REPO='__REPO__'
+export NEXUS_AMI='__AMI__' NEXUS_INSTANCE_TYPE='__INSTANCE_TYPE__'  # recorded in manifest.txt
 export PATH=$PATH:/snap/bin  # the snap-installed aws CLI lives here
 
 # Uploads the log, then a DONE (success) or FAILED marker, always last, then shuts down.

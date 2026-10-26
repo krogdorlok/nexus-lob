@@ -17,15 +17,18 @@ scripts/bench_linux.sh || rc=$?  # on failure, still upload what exists for debu
                                  # DONE marker (written after success) marks a run complete
 
 {
+  echo "ami: ${NEXUS_AMI:-n/a}"
+  echo "instance type: ${NEXUS_INSTANCE_TYPE:-n/a}"
+  echo "kernel: $(uname -r)"
   echo "== lscpu"
-  lscpu
+  lscpu 2>&1 || true
   echo "== uname"
   uname -a
   echo "== cpu flags"
-  grep -m1 '^flags' /proc/cpuinfo
+  grep -m1 '^flags' /proc/cpuinfo 2>&1 || true
   echo "== perf hardware events"
   perf list hw cache 2>&1 || echo "perf unavailable"
-} > results/manifest.txt
+} > results/manifest.txt  # diagnostics only: a missing tool must not fail the run
 
 if [[ $target == s3://* ]]; then
   aws s3 cp --recursive results "$target/"

@@ -17,7 +17,10 @@ if [[ "$(uname -s)" != Linux ]] || ! command -v perf >/dev/null; then
 fi
 # Many virtual machines expose no hardware counters at all. That is a property of the machine,
 # so it is recorded as the result (with perf's own words) rather than treated as a failure.
-if ! probe=$(perf stat -x, -e cycles -- true 2>&1) || [[ $probe == *"not supported"* ]]; then
+# The probe asks for the full event set and counts as available only if perf prints at least
+# one numeric count (CSV, fixed locale), whatever its diagnostics say.
+probe=$(LC_ALL=C perf stat -x, -e "$EVENTS" -- true 2>&1) || true
+if ! grep -qE '^[0-9][0-9.]*,' <<<"$probe"; then
   {
     echo "this machine exposes no hardware performance counters to perf:"
     echo "$probe" | grep -v '^$' | head -3
@@ -28,7 +31,7 @@ fi
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 for run in nexus naive none; do
-  perf stat -x, -r 5 -e "$EVENTS" -o "$tmp/$run.txt" -- "$BIN" --replay "$run"
+  LC_ALL=C perf stat -x, -r 5 -e "$EVENTS" -o "$tmp/$run.txt" -- "$BIN" --replay "$run"
 done
 mv "$tmp/nexus.txt" results/perf_nexus.txt
 mv "$tmp/naive.txt" results/perf_naive.txt

@@ -52,11 +52,14 @@ if [[ $SG == None ]]; then
   fi
   SG="<security group from setup.sh>"
 fi
-# Latest official Ubuntu 24.04 image from Canonical (owner 099720109477).
-AMI=$(aws_ ec2 describe-images --owners 099720109477 --filters \
-  'Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*' \
-  'Name=state,Values=available' --query 'sort_by(Images,&CreationDate)[-1].ImageId' \
-  --output text)
+# Latest official Ubuntu 24.04 image from Canonical (owner 099720109477), unless AMI is pinned.
+if [[ -z $AMI ]]; then
+  AMI=$(aws_ ec2 describe-images --owners 099720109477 --filters \
+    'Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*' \
+    'Name=state,Values=available' --query 'sort_by(Images,&CreationDate)[-1].ImageId' \
+    --output text)
+fi
+safe AMI "$AMI"
 LIVE=$(live_instances)
 if [[ -n $LIVE ]]; then
   echo "a benchmark instance is already running ($LIVE); wait for it to finish" >&2
@@ -86,7 +89,8 @@ trap cleanup EXIT
 trap 'exit 130' INT TERM
 
 sed -e "s|__BUCKET__|$BUCKET|" -e "s|__PREFIX__|$PREFIX|" -e "s|__COMMIT__|$COMMIT|" \
-  -e "s|__REPO__|$REPO_URL|" -e "s|__MAX_MINUTES__|$MAX_MINUTES|" \
+  -e "s|__REPO__|$REPO_URL|" -e "s|__MAX_MINUTES__|$MAX_MINUTES|" -e "s|__AMI__|$AMI|" \
+  -e "s|__INSTANCE_TYPE__|$INSTANCE_TYPE|" \
   scripts/aws/userdata.sh > "$userdata"
 
 echo "commit $COMMIT on $INSTANCE_TYPE ($AMI), results to s3://$BUCKET/$PREFIX"
@@ -156,6 +160,11 @@ if [[ -n $previous && $previous != None ]]; then
   base=$(mktemp -d)
   aws_ s3 cp --recursive "s3://$BUCKET/$previous" "$base" --only-show-errors
   python3 scripts/compare_results.py "$base" "$dest" > "$dest/comparison.md"
+  old_ami=$(sed -n 's/^ami: //p' "$base/manifest.txt" 2>/dev/null || true)
+  if [[ -n $old_ami && $old_ami != "$AMI" ]]; then  # a new OS image can move numbers by itself
+    printf '%s\n\n%s\n' "Note: the baseline ran on $old_ami, this run on $AMI; differences may come from the OS image, not the code." \
+      "$(cat "$dest/comparison.md")" > "$dest/comparison.md"
+  fi
   rm -rf "$base"
   echo "compared with s3://$BUCKET/$previous: $dest/comparison.md"
 else

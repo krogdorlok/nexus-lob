@@ -37,7 +37,16 @@ fi
 
 if ((DELETE_BUCKET)); then
   BUCKET=$(bucket_name)
-  run aws_ s3 rm "s3://$BUCKET" --recursive
-  run aws_ s3api delete-bucket --bucket "$BUCKET"
+  if aws_ s3api head-bucket --bucket "$BUCKET" >/dev/null 2>&1; then
+    # The bucket is versioned: every object version and delete marker must go first.
+    while :; do
+      batch=$(aws_ s3api list-object-versions --bucket "$BUCKET" --max-items 400 --output json \
+        --query '{Objects: [Versions, DeleteMarkers][][].{Key: Key, VersionId: VersionId}}')
+      [[ $batch == *'"Key"'* ]] || break
+      run aws_ s3api delete-objects --bucket "$BUCKET" --delete "$batch" >/dev/null
+      ((APPLY)) || break  # a dry run shows one batch
+    done
+    run aws_ s3api delete-bucket --bucket "$BUCKET"
+  fi
 fi
 ((APPLY)) && echo "teardown complete" || echo "dry run only; rerun with --apply to execute"

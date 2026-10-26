@@ -1,8 +1,10 @@
 name: AWS run smoke test
 
-# Runs the same benchmark steps the EC2 instance runs (scripts/aws/remote_bench.sh) on a
-# GitHub runner, writing to a local directory instead of S3, so a broken script is caught here
-# instead of on a launched instance. No AWS credentials are involved.
+# Exercises the plumbing the EC2 instance runs (scripts/aws/remote_bench.sh) on a GitHub runner,
+# writing to a local directory instead of S3, so a broken script is caught here instead of on a
+# launched instance. QUICK=1 shrinks every step, so nothing here is a measurement, and `perf` is
+# a stub that fails the way the free-tier instance's perf does ("no supported events"), so the
+# recorded-unavailable path is tested. No AWS credentials are involved and real perf never runs.
 on:
   push:
     paths: ['scripts/**', '.github/workflows/aws-smoke.yml']
@@ -16,29 +18,40 @@ jobs:
 
       - name: Lint scripts
         run: |
-          sed -e 's|__BUCKET__|b|;s|__PREFIX__|p|;s|__COMMIT__|c|;s|__REPO__|r|;s|__MAX_MINUTES__|75|' \
+          sed -e 's|__BUCKET__|b|;s|__PREFIX__|p|;s|__COMMIT__|c|;s|__REPO__|r|;s|__MAX_MINUTES__|75|;s|__AMI__|ami-1|;s|__INSTANCE_TYPE__|t|' \
             scripts/aws/userdata.sh > "$RUNNER_TEMP/userdata.sh"
           (cd scripts/aws && shellcheck -x setup.sh teardown.sh)
           shellcheck -x scripts/*.sh scripts/aws/launch_bench.sh scripts/aws/remote_bench.sh \
             "$RUNNER_TEMP/userdata.sh"
 
-      - name: Install toolchain
-        run: sudo apt-get update && sudo apt-get install -y ninja-build g++-13
+      - name: Install toolchain and a perf stub without hardware counters
+        run: |
+          sudo apt-get update && sudo apt-get install -y ninja-build g++-13
+          mkdir -p "$RUNNER_TEMP/stub"
+          printf '#!/bin/sh\necho "Error:" >&2\necho "No supported events found." >&2\necho "The cycles event is not supported." >&2\nexit 255\n' \
+            > "$RUNNER_TEMP/stub/perf"
+          chmod +x "$RUNNER_TEMP/stub/perf"
+          echo "$RUNNER_TEMP/stub" >> "$GITHUB_PATH"
 
-      - name: Run the instance's benchmark steps locally
+      - name: Run the instance's steps locally (QUICK)
         env:
           CC: gcc-13
           CXX: g++-13
-          REPS: 1
+          QUICK: 1
         run: scripts/aws/remote_bench.sh "$RUNNER_TEMP/run"
 
-      - name: Check the run is complete and renders
+      - name: Check every required outcome
         run: |
-          test -f "$RUNNER_TEMP/run/DONE"
-          for f in machine.txt manifest.txt fuzz.txt mutation.txt micro.json \
-                   replay_nexus.txt replay_naive.txt; do
-            test -s "$RUNNER_TEMP/run/$f" || { echo "missing $f"; exit 1; }
+          run="$RUNNER_TEMP/run"
+          test -f "$run/DONE"
+          for f in machine.txt manifest.txt fuzz.txt mutation.txt micro.json replay_nexus.txt \
+                   replay_naive.txt e2e_nexus.json e2e_naive.json perf_unavailable.txt; do
+            test -s "$run/$f" || { echo "missing or empty: $f"; exit 1; }
           done
+          grep -q "no hardware performance counters" "$run/perf_unavailable.txt"
+          grep -q "mode: QUICK" "$run/machine.txt"
+          if ls "$run"/perf_nexus.txt 2>/dev/null; then echo "unexpected counter files"; exit 1; fi
           printf '<!-- RESULTS_AWS -->\n<!-- /RESULTS_AWS -->\n' >> README.md
-          python3 scripts/make_results_table.py "$RUNNER_TEMP/run" RESULTS_AWS
-          python3 scripts/compare_results.py "$RUNNER_TEMP/run" "$RUNNER_TEMP/run"
+          python3 scripts/make_results_table.py "$run" RESULTS_AWS
+          grep -q "Not measurable here" README.md
+          python3 scripts/compare_results.py "$run" "$run"

@@ -22,8 +22,9 @@ echo "account bucket: $BUCKET (region $REGION)"
 if aws_ s3api head-bucket --bucket "$BUCKET" >/dev/null 2>&1; then
   echo "bucket exists"
 else
-  run aws_ s3api create-bucket --bucket "$BUCKET" \
-    --create-bucket-configuration "LocationConstraint=$REGION"
+  where=(--create-bucket-configuration "LocationConstraint=$REGION")
+  [[ $REGION == us-east-1 ]] && where=()  # S3 rejects an explicit us-east-1 constraint
+  run aws_ s3api create-bucket --bucket "$BUCKET" "${where[@]}"
 fi
 run aws_ s3api put-public-access-block --bucket "$BUCKET" --public-access-block-configuration \
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
@@ -101,6 +102,18 @@ for port in 80 443; do
       --ip-permissions "IpProtocol=tcp,FromPort=$port,ToPort=$port,IpRanges=[{CidrIp=0.0.0.0/0}]" >/dev/null
   fi
 done
+# Fail closed unless the group now holds exactly those two IPv4 rules and nothing else.
+if ((APPLY)); then
+  actual=$(aws_ ec2 describe-security-groups --group-ids "$SG" --output text --query \
+    'SecurityGroups[0].IpPermissionsEgress[].[IpProtocol,FromPort,ToPort,IpRanges[0].CidrIp,length(IpRanges),length(Ipv6Ranges),length(PrefixListIds),length(UserIdGroupPairs)]' |
+    sort)
+  expected=$(printf 'tcp\t443\t443\t0.0.0.0/0\t1\t0\t0\t0\ntcp\t80\t80\t0.0.0.0/0\t1\t0\t0\t0')
+  if [[ $actual != "$expected" ]]; then
+    printf 'security group %s has unexpected outbound rules:\n%s\n' "$SG" "$actual" >&2
+    echo "remove them in the console (or run teardown.sh) and rerun setup" >&2
+    exit 1
+  fi
+fi
 echo "security group $SG: no inbound, outbound tcp 80 and 443 only"
 
 ((APPLY)) && echo "setup complete" || echo "dry run only; rerun with --apply to execute"
