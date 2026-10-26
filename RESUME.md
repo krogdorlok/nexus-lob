@@ -1,7 +1,8 @@
 # Resume bullets
 
 Every measured number below is copied from the cited file in `results/` (Apple M2, see
-`results/machine.txt`); stream and test sizes are parameters of the code. Rerun
+`results/machine.txt`; Intel Xeon on AWS, see `results/aws-c7i-flex.large/machine.txt`);
+stream and test sizes are parameters of the code. Rerun
 `scripts/bench_linux.sh` and update these if the files change.
 
 * **Built a C++20 limit order book whose matching core runs 3.73x faster than a
@@ -11,7 +12,10 @@ Every measured number below is copied from the cited file in `results/` (Apple M
   open-addressing id index with backward-shift deletion, and a pre-faulted object pool with
   zero heap allocation on the hot path (enforced by a counting-allocator test). Single-threaded
   replay of the same 10M-command stream: 44.87M vs 12.03M commands/s; a cancel costs 9.0 vs
-  61.0 CPU ns. *(results/replay_nexus.txt, results/replay_naive.txt, results/micro.json)*
+  61.0 CPU ns. The lead held on an Intel Xeon under Linux, run on AWS EC2 with results
+  archived to S3: 24.08M vs 9.17M commands/s (2.63x), cancel 12.2 vs 81.5 CPU ns.
+  *(results/replay_nexus.txt, results/replay_naive.txt, results/micro.json,
+  results/aws-c7i-flex.large/)*
 
 * **Engineered a lock-free three-thread pipeline that sustains 15.87M commands/s end to end,
   2.04x the baseline engine in the same pipeline.** Producer, engine (pinned on Linux) and

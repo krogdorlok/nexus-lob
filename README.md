@@ -182,12 +182,16 @@ What a run on the free-tier instance covers:
   vCPUs the three spinning threads would share cores and measure the scheduler, not the
   engine.
 * **Hardware counters, only if the instance exposes them.** If it does not, `perf`'s own
-  message is written to `perf_unavailable.txt` in place of counts. An earlier attempt on this
-  instance type stopped exactly there, with `perf` reporting "No supported events found. The
-  cycles event is not supported." (its log is archived in the results bucket under
-  `runs/c7i-flex.large/b9b1edf/`). AWS documents full counter access only for whole-socket
-  sizes (for example `c7i.24xlarge` and `c7i.48xlarge`) and metal instances, none of which are
-  on the free tier.
+  message is written to `perf_unavailable.txt` in place of counts. `c7i-flex.large` does not:
+  see `results/aws-c7i-flex.large/perf_unavailable.txt`. AWS documents full counter access
+  only for whole-socket sizes (for example `c7i.24xlarge` and `c7i.48xlarge`) and metal
+  instances, none of which are on the free tier.
+
+The committed run (`results/aws-c7i-flex.large/`) is a KVM virtual machine with one physical
+core running two hyper-threads (`manifest.txt`), so these results characterize this shared
+VM configuration, not dedicated-core performance. Its `run.log` keeps the stage timestamps:
+the micro benchmarks take most of the run, because every timed batch gets a freshly built
+book and the untimed rebuild is expensive on a small VM.
 
 The scripts refuse instance types that are not free-tier eligible unless `ALLOW_PAID=1` is
 set (which also needs an account on a paid plan). Pin `AMI=ami-...` to keep a comparison
@@ -200,34 +204,48 @@ six-month account.
 Machine (`results/aws-c7i-flex.large/machine.txt`):
 
 ```
-TBD
+date: 2026-10-26T00:52:21Z
+commit: 41193ee
+os: Linux 7.0.0-1014-aws x86_64
+cpu: Intel(R) Xeon(R) Platinum 8488C
+logical cpus: 2
+memory: 3.7 GiB
+governor: n/a
+perf: perf version 7.0.14
+compiler: /usr/bin/g++-13 (g++-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0)
+flags: release preset, -O3 -march=native
 ```
 
 ### End to end (pipeline, `results/aws-c7i-flex.large/e2e_<engine>.json`)
 
-TBD (not yet measured)
+TBD (skipped: this machine has 2 logical CPUs; the pipeline needs 3 dedicated cores)
 
 ### Engine only (single-threaded replay, `results/aws-c7i-flex.large/replay_<engine>.txt`)
 
-TBD (not yet measured)
+Same seeded 10M-command stream, no queues. Median of 5 runs, min to max in brackets.
+
+| Engine | Throughput |
+|---|---|
+| NexusLOB | 24.08M/s [22.60M/s to 24.47M/s] |
+| Naive | 9.17M/s [9.09M/s to 9.26M/s] |
+| NexusLOB advantage | 2.63x |
 
 ### Micro benchmarks (Google Benchmark, `results/aws-c7i-flex.large/micro.json`)
 
-TBD (not yet measured)
+Median of 5 repetitions, CPU ns per operation (one sweep = one operation). Each batch runs on a fresh book.
+
+| Operation | NexusLOB (CPU ns/op) | Naive (CPU ns/op) | NexusLOB advantage |
+|---|---|---|---|
+| AddPassive | 26.2 | 70.6 | 2.70x |
+| Cancel | 12.2 | 81.5 | 6.68x |
+| ModifyPrice | 14.8 | 70.6 | 4.76x |
+| Sweep (1 level) | 25.9 | 49.6 | 1.92x |
+| Sweep (8 levels) | 130.6 | 330.5 | 2.53x |
+| Sweep (64 levels) | 1,125.7 | 2,643.2 | 2.35x |
 
 ### Hardware counters (`perf stat`, `results/aws-c7i-flex.large/perf_<engine>.txt`)
 
-perf counters require Linux with perf (the intended target is x86_64); run `scripts/perf_compare.sh` there.
-
-| Event | NexusLOB | Naive | Reduction |
-|---|---|---|---|
-| cycles | TBD (requires Linux x86_64 with perf) | TBD | TBD |
-| instructions | TBD (requires Linux x86_64 with perf) | TBD | TBD |
-| L1-dcache-loads | TBD (requires Linux x86_64 with perf) | TBD | TBD |
-| L1-dcache-load-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
-| LLC-loads | TBD (requires Linux x86_64 with perf) | TBD | TBD |
-| LLC-load-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
-| branch-misses | TBD (requires Linux x86_64 with perf) | TBD | TBD |
+Not measurable here, recorded in `results/aws-c7i-flex.large/perf_unavailable.txt`: this machine exposes no hardware performance counters to perf: Error: No supported events found. The cycles event is not supported.
 <!-- /RESULTS_AWS -->
 
 ## Reproducibility
@@ -253,7 +271,7 @@ sensitive to which cores macOS assigns.
 
 ## Limitations
 
-* The committed results come from an Apple M2 laptop with a normal desktop session: no core
+* The main results come from an Apple M2 laptop with a normal desktop session: no core
   pinning (macOS has no affinity API), no isolation, and a coarse system timer (the
   calibrated tick is shown above), so each latency sample is a whole number of ticks. The
   histogram is exact below 128 ticks and within 1.6% above. At the paced rate the two
@@ -261,6 +279,10 @@ sensitive to which cores macOS assigns.
   separate them; the engine-only replay and the micro benchmarks do. Where min-to-max ranges
   overlap the table prints no ratio. Treat the e2e tail columns as a property of this
   machine until rerun on an isolated Linux core.
+* The Linux/Intel results come from a shared two-hyper-thread VM on the AWS free tier, which
+  is too small for the pipeline and exposes no hardware counters. NexusLOB leads on both
+  machines, by a smaller margin on Intel than on the M2 for adds, modifies and sweeps; cancel is the
+  most consistent gain.
 * Hardware counters (`perf stat`) need Linux on a machine that exposes its performance
   counters: bare metal or a whole-socket cloud instance. The free-tier instance does not, so
   they remain unmeasured; see the AWS section.

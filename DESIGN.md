@@ -232,20 +232,22 @@ and 443 outbound, metadata access requires IMDSv2 tokens, and its role can do ex
 thing: write objects under `runs/` in the results bucket. Every script is a dry run unless
 given `--apply`.
 
-**Counters are recorded or explained, never invented.** An earlier attempt stopped when `perf`
-on `c7i-flex.large` reported that it exposes no hardware performance counters at all, which
-matches AWS's documentation for small instance sizes (its log is archived in the results
-bucket). The scripts now treat that as an outcome: perf's message is written to
-`perf_unavailable.txt` instead of failing the run or printing a number. Counters need a
-whole-socket or metal instance, which is outside the free tier.
+**Counters are recorded or explained, never invented.** On `c7i-flex.large`, `perf` reports
+that the instance exposes no hardware performance counters at all, which matches AWS's
+documentation for small instance sizes (`results/aws-c7i-flex.large/perf_unavailable.txt`).
+The first attempt treated that as a failure and lost its other measurements; the scripts now
+treat it as an outcome: perf's message is written to `perf_unavailable.txt` instead of
+failing the run or printing a number. Counters need a whole-socket or metal instance, which
+is outside the free tier.
 
 ## Limitations
 
 * One instrument per engine; no self-trade prevention; no iceberg, stop or pegged orders.
 * The price band is fixed at construction.
-* Results committed in `results/` come from an Apple M2 laptop running a desktop session,
-  without pinning or core isolation. Hardware counters need Linux on a machine that exposes
-  them (bare metal or a whole-socket instance); the free-tier EC2 instance does not.
+* Results in `results/` come from an Apple M2 laptop running a desktop session, without
+  pinning or core isolation; those in `results/aws-c7i-flex.large/` from a free-tier EC2 VM
+  with one physical core and two hyper-threads. Hardware counters need Linux on a machine that
+  exposes them (bare metal or a whole-socket instance); the free-tier EC2 instance does not.
 * Not a hard real-time system: no `mlockall`, huge pages, real-time scheduling, NUMA policy
   or interrupt routing, and a full outbound queue makes the engine spin until it drains.
 * The flow generator is synthetic, not a replay of real market data.
