@@ -18,6 +18,62 @@ files in `results/`; other figures (test sizes, layouts) are parameters of the c
   (`scripts/mutation_check.sh`, also in CI) injects realistic bugs and requires the fuzzer to
   catch each one.
 
+## Quick start
+
+**1. Install the tools** (once). You need Git, CMake 3.20+, Ninja, Python 3 and a C++20
+compiler (GCC 13+, Clang 17+ or Apple Clang 17+).
+
+```sh
+# macOS
+xcode-select --install          # Apple's compiler, Git and Python 3
+brew install cmake ninja
+
+# Ubuntu 24.04
+sudo apt-get update && sudo apt-get install -y build-essential g++-13 cmake ninja-build git python3
+```
+
+**2. Get the code and build it.** The first configure downloads GoogleTest and Google
+Benchmark (pinned versions), so it needs an internet connection.
+
+```sh
+git clone https://github.com/krogdorlok/nexus-lob && cd nexus-lob
+cmake --preset release
+cmake --build --preset release
+```
+
+**3. Check it works.** Every unit test, the zero-allocation proof and a short differential fuzz
+run against the reference engine:
+
+```sh
+ctest --preset release          # should end with: 100% tests passed
+```
+
+**4. Watch it trade.** Each program prints what it measured; your numbers depend on your
+machine.
+
+```sh
+# Prove the fast engine matches the reference engine, event for event, on 20M random commands
+./build/release/fuzz_differential --seeds 200 --commands 100000
+
+# Run the three-thread pipeline once: prints throughput (commands/s) and latency percentiles
+./build/release/nexus_lob --commands 2000000 --rate 1000000
+./build/release/nexus_lob --engine naive --commands 2000000 --rate 1000000   # the baseline
+
+# Engine only, no threads: the same 10M-command stream through each engine
+./build/release/bench_e2e --replay nexus
+./build/release/bench_e2e --replay naive
+
+# Per-operation costs for both engines (add, cancel, modify, sweeps)
+./build/release/bench_micro
+```
+
+`nexus_lob` flags: `--engine nexus|naive`, `--commands N`, `--warmup N`, `--rate R` (commands
+per second; `0` is flood mode), `--cpu C` (engine core, Linux only). A paced run reports a
+throughput equal to its rate; use `--rate 0` to see the maximum, and paced runs for latency.
+
+**5. Reproduce the published results** (slow: it reruns everything, then rewrites `results/`
+and the tables below): `REPS=7 scripts/bench_linux.sh`.
+
 ## Architecture
 
 ```
@@ -47,7 +103,7 @@ The matching rules (reject order, event contents, when modify keeps priority) ar
 once, at the top of [`include/nexus/core/events.hpp`](include/nexus/core/events.hpp).
 [DESIGN.md](DESIGN.md) explains every decision and the alternative it beat.
 
-## Build, test, benchmark
+## Build, test, benchmark: all options
 
 Requires CMake 3.20+, Ninja and a C++20 compiler (GCC 13+, Clang 17+, Apple Clang 17+).
 GoogleTest and Google Benchmark are fetched at pinned versions.
